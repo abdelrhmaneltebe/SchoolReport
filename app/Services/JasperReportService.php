@@ -18,6 +18,31 @@ class JasperReportService
     }
 
     /**
+     * Check whether the JasperReports execution environment (Java 17 + proc_open) is available.
+     */
+    public function isAvailable(): bool
+    {
+        if (!function_exists('proc_open')) {
+            return false;
+        }
+
+        $disabled = explode(',', (string)ini_get('disable_functions'));
+        $disabled = array_map('trim', $disabled);
+        if (in_array('proc_open', $disabled)) {
+            return false;
+        }
+
+        try {
+            $process = new Process(['java', '-version']);
+            $process->setTimeout(3);
+            $process->run();
+            return $process->isSuccessful();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Compile and export a report via Java 17 JasperReports runner.
      *
      * @param string $templatePath e.g. "official_report_card_a4.jrxml" or full absolute path
@@ -28,6 +53,12 @@ class JasperReportService
      */
     public function generateReport(string $templatePath, array $parameters, array $jsonData, string $outputPath): string
     {
+        if (!$this->isAvailable()) {
+            throw new \RuntimeException(
+                "JasperReports requires Java 17 and PHP proc_open. On shared web hosting where Java is restricted, use the high-resolution Print / PDF mode for instant report card generation."
+            );
+        }
+
         $jrxmlFile = file_exists($templatePath)
             ? $templatePath
             : $this->templatesPath . DIRECTORY_SEPARATOR . $templatePath;

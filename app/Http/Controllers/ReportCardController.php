@@ -99,6 +99,13 @@ class ReportCardController extends Controller
             'gradeRecords.assignment.subject'
         ])->findOrFail($studentId);
 
+        if (!$this->jasperService->isAvailable()) {
+            return redirect()->route('reports.card.single', [
+                'student' => $student->id,
+                'print' => 1
+            ])->with('info', 'ℹ️ On shared web hosting without Java runtime, your official report card is generated in High-Resolution Print / PDF format.');
+        }
+
         $school = School::where('school_id', $student->school_id)->firstOrFail();
 
         $subjectRows = [];

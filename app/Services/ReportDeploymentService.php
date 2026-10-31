@@ -286,11 +286,40 @@ class ReportDeploymentService
     }
 
     /**
+     * Check whether Java 17 and proc_open are available on this environment.
+     */
+    public function isJavaAvailable(): bool
+    {
+        if (!function_exists('proc_open')) {
+            return false;
+        }
+
+        $disabled = explode(',', (string)ini_get('disable_functions'));
+        $disabled = array_map('trim', $disabled);
+        if (in_array('proc_open', $disabled)) {
+            return false;
+        }
+
+        try {
+            $process = new Process(['java', '-version']);
+            $process->setTimeout(3);
+            $process->run();
+            return $process->isSuccessful();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Compile a single JRXML file to .jasper via Java runner.
      */
     public function compileJrxmlFile(string $jrxmlPath): bool
     {
         if (!file_exists($jrxmlPath)) {
+            return false;
+        }
+
+        if (!$this->isJavaAvailable()) {
             return false;
         }
 
@@ -321,6 +350,15 @@ class ReportDeploymentService
      */
     public function compileAll(ReportTemplate $template): array
     {
+        if (!$this->isJavaAvailable()) {
+            return [
+                'success' => false,
+                'message' => 'Java 17 runtime is not available on this shared hosting environment.',
+                'compiled' => [],
+                'failed' => [],
+            ];
+        }
+
         $dirs = $this->ensurePackageDirectories($template);
         $compiled = [];
         $failed = [];
