@@ -335,10 +335,12 @@ class ReportAnalyticsService
                 'class' => $class,
                 'totalStudents' => 0,
                 'averagePercentage' => 0.0,
+                'highestScore' => 0.0,
+                'lowestScore' => 0.0,
                 'passRate' => 0.0,
                 'topPerformer' => null,
                 'subjectAnalytics' => [],
-                'gradeDistribution' => [],
+                'gradeDistribution' => ['A+' => 0, 'A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0],
                 'atRiskStudents' => [],
                 'topPerformers' => [],
             ];

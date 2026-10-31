@@ -176,6 +176,25 @@ class ReportStudioTest extends TestCase
         $response->assertSee('Grade Distribution Curve');
     }
 
+    public function test_can_load_class_performance_analytics_for_empty_class_with_no_students()
+    {
+        $emptyClass = \App\Models\SchoolClass::create([
+            'school_id' => $this->school->school_id,
+            'grade_id' => $this->level10->id,
+            'class_name' => 'Empty Batch',
+            'max_capacity' => 30,
+        ]);
+
+        $response = $this->withSession(['active_school_id' => $this->school->school_id])
+            ->get(route('reports.analytics.class', $emptyClass->id));
+
+        $response->assertStatus(200);
+        $response->assertSee('Performance & Grade Analytics: Empty Batch');
+        $response->assertSee('0.0%');
+        $response->assertSee('High:');
+        $response->assertSee('Low:');
+    }
+
     public function test_can_export_class_broadsheet_csv()
     {
         $response = $this->withSession(['active_school_id' => $this->school->school_id])

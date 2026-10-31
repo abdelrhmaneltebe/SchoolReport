@@ -66,16 +66,16 @@
         <div class="col-sm-6 col-lg-3">
             <div class="card border rounded-3 p-3 bg-white h-100 shadow-2xs">
                 <span class="text-muted small fw-semibold text-uppercase">Class Average</span>
-                <h3 class="fw-bold text-primary mb-0 mt-1">{{ number_format($analytics['averagePercentage'], 1) }}%</h3>
-                <small class="text-muted">High: <strong>{{ number_format($analytics['highestScore'], 1) }}%</strong> • Low: <strong>{{ number_format($analytics['lowestScore'], 1) }}%</strong></small>
+                <h3 class="fw-bold text-primary mb-0 mt-1">{{ number_format($analytics['averagePercentage'] ?? 0.0, 1) }}%</h3>
+                <small class="text-muted">High: <strong>{{ number_format($analytics['highestScore'] ?? 0.0, 1) }}%</strong> • Low: <strong>{{ number_format($analytics['lowestScore'] ?? 0.0, 1) }}%</strong></small>
             </div>
         </div>
 
         <div class="col-sm-6 col-lg-3">
             <div class="card border rounded-3 p-3 bg-white h-100 shadow-2xs">
                 <span class="text-muted small fw-semibold text-uppercase">Overall Pass Rate</span>
-                <h3 class="fw-bold {{ $analytics['passRate'] >= 75 ? 'text-success' : 'text-danger' }} mb-0 mt-1">
-                    {{ number_format($analytics['passRate'], 1) }}%
+                <h3 class="fw-bold {{ ($analytics['passRate'] ?? 0) >= 75 ? 'text-success' : 'text-danger' }} mb-0 mt-1">
+                    {{ number_format($analytics['passRate'] ?? 0.0, 1) }}%
                 </h3>
                 <small class="text-muted">Meeting 60.0% benchmark</small>
             </div>
@@ -111,7 +111,8 @@
                     'D'  => ['bg' => 'bg-warning', 'border' => 'border-warning', 'text' => 'text-warning'],
                     'F'  => ['bg' => 'bg-danger',  'border' => 'border-danger',  'text' => 'text-danger'],
                 ];
-                $maxDist = max(array_values($analytics['gradeDistribution'])) ?: 1;
+                $distValues = array_values($analytics['gradeDistribution'] ?? []);
+                $maxDist = !empty($distValues) ? (max($distValues) ?: 1) : 1;
             @endphp
 
             @foreach($analytics['gradeDistribution'] as $grade => $count)
