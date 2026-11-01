@@ -32,7 +32,7 @@ class HomePageAndDemoRequestTest extends TestCase
         $response->assertSee('Sign In');
     }
 
-    public function test_authenticated_user_is_redirected_to_dashboard_from_root(): void
+    public function test_authenticated_user_can_view_home_page_with_dashboard_access(): void
     {
         $user = User::factory()->create([
             'role' => 'SCHOOL_ADMIN',
@@ -40,7 +40,9 @@ class HomePageAndDemoRequestTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->get('/');
-        $response->assertRedirect(route('dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee('Open Dashboard');
+        $response->assertSee('Go to Dashboard');
     }
 
     public function test_guest_can_submit_demo_request(): void

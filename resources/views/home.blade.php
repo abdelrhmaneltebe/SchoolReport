@@ -186,12 +186,24 @@
 
             <!-- Action buttons -->
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" style="border-radius: 8px;">
-                    🔑 Sign In
-                </a>
-                <a href="#demo" class="btn btn-sm btn-gradient-primary px-3 py-1.5 fw-semibold" style="border-radius: 8px;">
-                    🚀 Request a Demo
-                </a>
+                @auth
+                    <a href="{{ route('dashboard') }}" class="btn btn-sm btn-primary px-3 py-1.5 fw-semibold" style="border-radius: 8px;">
+                        📊 Open Dashboard
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-secondary px-2.5 py-1.5 fw-semibold" style="border-radius: 8px;" title="Sign Out">
+                            🚪 Exit
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" style="border-radius: 8px;">
+                        🔑 Sign In
+                    </a>
+                    <a href="#demo" class="btn btn-sm btn-gradient-primary px-3 py-1.5 fw-semibold" style="border-radius: 8px;">
+                        🚀 Request a Demo
+                    </a>
+                @endauth
             </div>
         </div>
     </header>
@@ -214,15 +226,24 @@
                     </p>
 
                     <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-                        <a href="#demo" class="btn btn-lg btn-gradient-primary px-4 py-2.5 fw-bold" style="border-radius: 10px;">
-                            📋 Request Institutional Demo
-                        </a>
-                        <a href="{{ route('login') }}" class="btn btn-lg btn-light border px-4 py-2.5 fw-bold shadow-2xs" style="border-radius: 10px;">
-                            Sign In to Portal →
-                        </a>
-                        <a href="#instant-demo" class="btn btn-link text-decoration-none text-indigo fw-bold ps-1">
-                            ⚡ Try 1-Click Test Drive
-                        </a>
+                        @auth
+                            <a href="{{ route('dashboard') }}" class="btn btn-lg btn-gradient-primary px-4 py-2.5 fw-bold" style="border-radius: 10px;">
+                                📊 Go to Dashboard →
+                            </a>
+                            <a href="#demo" class="btn btn-lg btn-light border px-4 py-2.5 fw-bold shadow-2xs" style="border-radius: 10px;">
+                                📋 Request Institutional Demo
+                            </a>
+                        @else
+                            <a href="#demo" class="btn btn-lg btn-gradient-primary px-4 py-2.5 fw-bold" style="border-radius: 10px;">
+                                📋 Request Institutional Demo
+                            </a>
+                            <a href="{{ route('login') }}" class="btn btn-lg btn-light border px-4 py-2.5 fw-bold shadow-2xs" style="border-radius: 10px;">
+                                Sign In to Portal →
+                            </a>
+                            <a href="#instant-demo" class="btn btn-link text-decoration-none text-indigo fw-bold ps-1">
+                                ⚡ Try 1-Click Test Drive
+                            </a>
+                        @endauth
                     </div>
 
                     <!-- Platform stats -->
