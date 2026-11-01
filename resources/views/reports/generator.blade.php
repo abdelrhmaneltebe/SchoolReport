@@ -210,11 +210,15 @@
                             <span>🎓 Student (for Individual Card)</span>
                         </label>
                         <select class="form-select fw-semibold" name="student_id" id="generatorStudentSelect">
-                            @foreach($studentsInClass as $std)
-                                <option value="{{ $std->id }}" {{ $selectedStudentId == $std->id ? 'selected' : '' }}>
-                                    {{ $std->full_name }} ({{ $std->admission_number }})
-                                </option>
-                            @endforeach
+                            @if(count($studentsInClass) === 0)
+                                <option value="">-- No students in this class --</option>
+                            @else
+                                @foreach($studentsInClass as $std)
+                                    <option value="{{ $std->id }}" {{ $selectedStudentId == $std->id ? 'selected' : '' }}>
+                                        {{ $std->full_name }} ({{ $std->admission_number }})
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
 
@@ -755,12 +759,18 @@ function onReportDropdownChange(selectElement) {
     const description = selectedOption.dataset.description || '';
     const format = selectedOption.dataset.format || 'view';
     const isGlobal = selectedOption.dataset.isGlobal === '1';
+    const baseType = selectedOption.dataset.baseType || 'card_single';
 
     let params = [];
     try {
         params = JSON.parse(selectedOption.dataset.parameters || '[]');
     } catch(e) {
         params = ['level', 'class', 'format'];
+    }
+
+    if (baseType === 'card_single') {
+        if (!params.includes('student')) params.push('student');
+        if (!params.includes('class')) params.push('class');
     }
 
     // Update info header
@@ -823,16 +833,8 @@ function applyParameterVisibility(parameters) {
 
         if (parameters.includes(key)) {
             wrapper.classList.remove('d-none');
-            if (key === 'student') {
-                const sel = document.getElementById('generatorStudentSelect');
-                if (sel) sel.removeAttribute('disabled');
-            }
         } else {
             wrapper.classList.add('d-none');
-            if (key === 'student') {
-                const sel = document.getElementById('generatorStudentSelect');
-                if (sel) sel.setAttribute('disabled', 'disabled');
-            }
         }
     });
 }

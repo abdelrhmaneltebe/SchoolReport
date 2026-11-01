@@ -209,7 +209,7 @@ class ReportStudioTest extends TestCase
 
     public function test_dispatches_generator_form_submission_to_correct_route()
     {
-        // Test redirect for single card
+        // Test redirect for single card with explicitly selected student
         $responseSingle = $this->withSession(['active_school_id' => $this->school->school_id])
             ->post(route('reports.generator.dispatch'), [
                 'report_type' => 'card_single',
@@ -219,6 +219,41 @@ class ReportStudioTest extends TestCase
             ]);
 
         $responseSingle->assertRedirect(route('reports.card.single', ['student' => $this->student1->id, 'print' => 0]));
+
+        // Test fallback resolution when student_id is omitted or null (auto-picks first student in class)
+        $responseFallback = $this->withSession(['active_school_id' => $this->school->school_id])
+            ->post(route('reports.generator.dispatch'), [
+                'report_type' => 'card_single',
+                'class_id' => $this->class10A->id,
+                'student_id' => '',
+                'format' => 'view'
+            ]);
+
+        $responseFallback->assertRedirect(route('reports.card.single', ['student' => $this->student1->id, 'print' => 0]));
+
+        // Test graceful error redirect when school/class has no students at all
+        $emptySchool = School::create([
+            'school_id' => 'SCH-EMPTY-99',
+            'school_name' => 'Empty Academy 99',
+            'school_code' => 'EMP99'
+        ]);
+
+        $emptyClass = SchoolClass::create([
+            'school_id' => $emptySchool->school_id,
+            'grade_id' => $this->level10->id,
+            'class_name' => 'Empty Class 99'
+        ]);
+
+        $responseEmpty = $this->withSession(['active_school_id' => $emptySchool->school_id])
+            ->post(route('reports.generator.dispatch'), [
+                'report_type' => 'card_single',
+                'class_id' => $emptyClass->id,
+                'student_id' => '',
+                'format' => 'view'
+            ]);
+
+        $responseEmpty->assertRedirect(route('reports.generator'));
+        $responseEmpty->assertSessionHas('error');
 
         // Test redirect for batch cards
         $responseBatch = $this->withSession(['active_school_id' => $this->school->school_id])

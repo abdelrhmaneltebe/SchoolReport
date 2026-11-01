@@ -196,22 +196,50 @@ class ReportStudioController extends Controller
         $studentId = $request->input('student_id');
         $format = $request->input('format', $template->default_format ?? 'view');
 
+        $activeSchool = $this->resolveActiveSchool($request);
+
+        // Fallback resolution for student if missing or empty
+        if (in_array($reportType, ['card_single']) || $format === 'jasper') {
+            if (!$studentId && $classId) {
+                $studentId = Student::where('class_id', $classId)->value('id');
+            }
+            if (!$studentId) {
+                $studentId = Student::where('school_id', $activeSchool->school_id)->value('id');
+            }
+        }
+
+        // Fallback resolution for class if missing or empty
+        if (in_array($reportType, ['card_batch', 'analytics', 'at_risk', 'honor_roll', 'broadsheet'])) {
+            if (!$classId) {
+                $classId = SchoolClass::where('school_id', $activeSchool->school_id)->value('id');
+            }
+        }
+
         if ($format === 'csv' && $classId) {
             return $this->exportCsv($request, $classId);
         }
 
-        if ($format === 'jasper' && $studentId) {
+        if ($format === 'jasper') {
+            if (!$studentId) {
+                return redirect()->route('reports.generator')->with('error', '⚠️ Please select or enroll a student first to generate this JasperReports PDF.');
+            }
             return $this->exportJasper($request, $studentId, $template);
         }
 
         switch ($reportType) {
             case 'card_single':
+                if (!$studentId) {
+                    return redirect()->route('reports.generator')->with('error', '⚠️ No students found in the selected class. Please enroll students or choose a class with active students.');
+                }
                 return redirect()->route('reports.card.single', [
                     'student' => $studentId,
                     'print' => $format === 'print' ? 1 : 0
                 ]);
 
             case 'card_batch':
+                if (!$classId) {
+                    return redirect()->route('reports.generator')->with('error', '⚠️ Please select or configure a class first to print batch report cards.');
+                }
                 return redirect()->route('reports.card.batch', [
                     'class' => $classId,
                     'print' => $format === 'print' ? 1 : 0
@@ -220,6 +248,9 @@ class ReportStudioController extends Controller
             case 'analytics':
             case 'at_risk':
             case 'honor_roll':
+                if (!$classId) {
+                    return redirect()->route('reports.generator')->with('error', '⚠️ Please select or configure a class first to view performance analytics.');
+                }
                 return redirect()->route('reports.analytics.class', [
                     'class' => $classId,
                     'tab' => $reportType
@@ -227,7 +258,10 @@ class ReportStudioController extends Controller
 
             case 'broadsheet':
             default:
-                return redirect()->route('reports.broadsheet', ['class_id' => $classId]);
+                if (!$classId) {
+                    $classId = SchoolClass::where('school_id', $activeSchool->school_id)->value('id');
+                }
+                return redirect()->route('reports.broadsheet', array_filter(['class_id' => $classId]));
         }
     }
 
