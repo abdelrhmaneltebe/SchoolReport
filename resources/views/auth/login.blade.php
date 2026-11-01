@@ -38,6 +38,14 @@
 </head>
 <body class="p-3">
     <div class="login-card p-4 p-md-5">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <a href="{{ route('home') }}" class="text-decoration-none small text-muted">
+                ← Back to Home
+            </a>
+            <a href="{{ route('home') }}#demo" class="text-decoration-none small text-primary fw-semibold">
+                Request Demo
+            </a>
+        </div>
         <div class="text-center mb-4">
             <div class="brand-badge mb-2">SR</div>
             <h4 class="fw-bold mb-1">School Reporting Hub</h4>

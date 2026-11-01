@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SchoolConfigurationController;
 use App\Http\Controllers\ReportCardController;
@@ -38,9 +39,12 @@ Route::get('/school/profile', [\App\Http\Controllers\SchoolProfileController::cl
 Route::post('/school/profile', [\App\Http\Controllers\SchoolProfileController::class, 'update'])->name('school.profile.update');
 Route::post('/school/profile/remove-logo', [\App\Http\Controllers\SchoolProfileController::class, 'removeLogo'])->name('school.profile.remove_logo');
 
+// 0. Public Landing Portal & Institutional Demo
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/request-demo', [HomeController::class, 'requestDemo'])->name('request_demo');
+
 // 3. Core Operational App (Scoped to Active / Individual School)
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/dashboard', [DashboardController::class, 'index']);
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // Pillar 1: Attendance System
 Route::get('/configuration/attendance', [SchoolConfigurationController::class, 'attendance'])->name('config.attendance');
