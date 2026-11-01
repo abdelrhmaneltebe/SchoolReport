@@ -35,6 +35,34 @@
 		<defaultValueExpression><![CDATA["Ragia Al Akhal"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="P_FOOTER_ADDRESS_IMAGE" class="java.lang.String"/>
+	<parameter name="P_STUDENT_ID" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[110]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_ACADEMIC_YEAR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["2026-2027"]]></defaultValueExpression>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[SELECT 
+    sub.subject_name AS subjectName,
+    COALESCE(CONCAT(ROUND(MAX(CASE WHEN gr.term_name IN ('Term 1', 'Trimester 1') THEN gr.total_score END), 0), '%'), '--') AS t1Percent,
+    COALESCE(MAX(CASE WHEN gr.term_name IN ('Term 1', 'Trimester 1') THEN gr.letter_grade END), '--') AS t1Grade,
+    COALESCE(CONCAT(ROUND(MAX(CASE WHEN gr.term_name IN ('Term 2', 'Trimester 2') THEN gr.total_score END), 0), '%'), '--') AS t2Percent,
+    COALESCE(MAX(CASE WHEN gr.term_name IN ('Term 2', 'Trimester 2') THEN gr.letter_grade END), '--') AS t2Grade,
+    COALESCE(CONCAT(ROUND(MAX(CASE WHEN gr.term_name IN ('Term 3', 'Trimester 3') THEN gr.total_score END), 0), '%'), '--') AS t3Percent,
+    COALESCE(MAX(CASE WHEN gr.term_name IN ('Term 3', 'Trimester 3') THEN gr.letter_grade END), '--') AS t3Grade,
+    COALESCE(CONCAT(ROUND(AVG(gr.total_score), 1), '%'), '--') AS cumulativePercent,
+    COALESCE(MAX(CASE WHEN gr.term_name IN ('Term 1', 'Trimester 1') THEN gr.letter_grade END), '--') AS cumulativeGrade,
+    COALESCE(csa.credit_hours, 1.0) AS credit
+FROM students s
+JOIN class_subject_assignments csa ON csa.class_id = s.class_id
+JOIN master_subjects sub ON csa.subject_id = sub.id
+LEFT JOIN grade_records gr ON gr.student_id = s.id 
+                          AND gr.class_subject_assignment_id = csa.id 
+                          AND gr.academic_cycle = $P{P_ACADEMIC_YEAR}
+WHERE s.id = $P{P_STUDENT_ID}
+GROUP BY sub.id, sub.subject_name, csa.credit_hours, csa.display_order
+ORDER BY csa.display_order ASC, sub.subject_name ASC]]>
+	</queryString>
 	<field name="subjectName" class="java.lang.String"/>
 	<field name="t1Percent" class="java.lang.String"/>
 	<field name="t1Grade" class="java.lang.String"/>
