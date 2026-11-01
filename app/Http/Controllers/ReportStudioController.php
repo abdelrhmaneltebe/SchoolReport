@@ -439,8 +439,14 @@ class ReportStudioController extends Controller
     public function singleCard(Request $request, $studentId)
     {
         $student = Student::with(['schoolClass.gradeLevel.division', 'gradeRecords'])->findOrFail($studentId);
-        $card = $this->analyticsService->buildStudentReportCardData($student);
         $isPrintMode = $request->boolean('print');
+
+        if ($student->school_id === 'SCH-SGIS-GAM' || $request->input('template') === 'sgis_trimester_card') {
+            $data = $this->analyticsService->buildSgisTrimesterCardData($student);
+            return view('reports.sgis_card', compact('data', 'isPrintMode'));
+        }
+
+        $card = $this->analyticsService->buildStudentReportCardData($student);
 
         return view('reports.card_single', compact('card', 'isPrintMode'));
     }
@@ -508,6 +514,45 @@ class ReportStudioController extends Controller
         }
 
         $school = School::where('school_id', $student->school_id)->firstOrFail();
+
+        // Check for SGIS Customized Trimester Report
+        if ($school->school_id === 'SCH-SGIS-GAM' || ($template && $template->report_code === 'sgis_trimester_card')) {
+            $sgisData = $this->analyticsService->buildSgisTrimesterCardData($student);
+
+            $templateFilePath = storage_path('app/schools/SCH-SGIS-GAM/reports/custom/sgis_report_card_a4.jasper');
+            if (!file_exists($templateFilePath)) {
+                $templateFilePath = storage_path('app/schools/SCH-SGIS-GAM/reports/custom/sgis_report_card_a4.jrxml');
+            }
+
+            $parameters = [
+                'P_SCHOOL_NAME' => $sgisData['school']['name'],
+                'P_REPORT_TITLE' => $sgisData['school']['reportTitle'],
+                'P_STUDENT_NAME' => $sgisData['student']['name'],
+                'P_CLASS_NAME' => $sgisData['student']['className'],
+                'P_DATE' => $sgisData['student']['date'],
+                'P_GPA' => (string)$sgisData['metrics']['gpa'],
+                'P_TOTAL_CREDITS' => (string)$sgisData['metrics']['totalCredits'],
+                'P_SUMMER_COURSES' => $sgisData['metrics']['summerCourses'],
+                'P_ABSENT_T1' => (string)$sgisData['attendance']['t1'],
+                'P_ABSENT_T2' => (string)$sgisData['attendance']['t2'],
+                'P_ABSENT_T3' => (string)$sgisData['attendance']['t3'],
+                'P_LOGO_PATH' => $sgisData['school']['logoPath'],
+                'P_COGNIA_LOGO_PATH' => $sgisData['school']['cogniaPath'],
+                'P_LEGAL_REP_NAME' => $sgisData['school']['legalRep'],
+                'P_DIRECTOR_NAME' => $sgisData['school']['director'],
+                'P_FOOTER_ADDRESS_IMAGE' => $sgisData['school']['footerPath'],
+            ];
+
+            $outputPath = storage_path("app/schools/{$school->school_id}/exports/{$student->admission_number}.pdf");
+
+            try {
+                $this->jasperService->generateReport($templateFilePath, $parameters, $sgisData['subjectRows'], $outputPath);
+                return response()->download($outputPath);
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'JasperReports runner notice: ' . $e->getMessage());
+            }
+        }
+
         $cardData = $this->analyticsService->buildStudentReportCardData($student);
 
         // Resolve template file path

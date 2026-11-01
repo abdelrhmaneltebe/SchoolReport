@@ -108,6 +108,10 @@ class ReportCardController extends Controller
 
         $school = School::where('school_id', $student->school_id)->firstOrFail();
 
+        if ($school->school_id === 'SCH-SGIS-GAM') {
+            return app(ReportStudioController::class)->exportJasper($request, $studentId);
+        }
+
         $subjectRows = [];
         $totalObtained = 0.0;
         $totalMax = 0.0;
