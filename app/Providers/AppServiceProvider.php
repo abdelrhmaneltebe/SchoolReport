@@ -20,7 +20,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        @ini_set('max_execution_time', '300');
+        if ($this->app->runningInConsole()) {
+            @ini_set('max_execution_time', '0');
+            @set_time_limit(0);
+        } else {
+            @ini_set('max_execution_time', '300');
+        }
+
         Paginator::useBootstrapFive();
     }
 }
