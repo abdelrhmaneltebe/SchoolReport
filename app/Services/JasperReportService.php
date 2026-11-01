@@ -144,17 +144,34 @@ class JasperReportService
         file_put_contents($tempDataFile, json_encode($jsonData));
         file_put_contents($tempParamsFile, json_encode($parameters));
 
+        // Resolve database connection parameters for direct SQL queries in Jasper templates
+        $dbHost = config('database.connections.mysql.host', '127.0.0.1');
+        $dbPort = config('database.connections.mysql.port', '3306');
+        $dbName = config('database.connections.mysql.database', 'u118583162_school_reports');
+        $dbUser = config('database.connections.mysql.username', 'root');
+        $dbPass = config('database.connections.mysql.password', '');
+        $dbUrl = "jdbc:mysql://{$dbHost}:{$dbPort}/{$dbName}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
+
         // Command: java -jar jasper-runner.jar --template ... --params ... --data ... --output ...
-        $process = new Process([
+        $cmd = [
             'java',
             '-jar',
             $this->runnerPath,
             '--template', $jrxmlFile,
             '--params', $tempParamsFile,
-            '--data', $tempDataFile,
             '--output', $outputPath,
-            '--format', 'pdf'
-        ]);
+            '--format', 'pdf',
+            '--db-url', $dbUrl,
+            '--db-user', (string)$dbUser,
+            '--db-pass', (string)$dbPass,
+        ];
+
+        if (!empty($jsonData)) {
+            $cmd[] = '--data';
+            $cmd[] = $tempDataFile;
+        }
+
+        $process = new Process($cmd);
 
         $process->setTimeout(300);
 

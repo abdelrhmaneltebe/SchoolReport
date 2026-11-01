@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,6 +28,10 @@ public class JasperRunner {
         String dataPath = null;
         String outputPath = null;
         String format = "pdf";
+        String dbUrl = null;
+        String dbUser = null;
+        String dbPass = null;
+        String dbDriver = "com.mysql.cj.jdbc.Driver";
 
         for (int i = 0; i < args.length; i++) {
             if ("--template".equals(args[i]) && i + 1 < args.length) {
@@ -38,11 +44,19 @@ public class JasperRunner {
                 outputPath = args[++i];
             } else if ("--format".equals(args[i]) && i + 1 < args.length) {
                 format = args[++i];
+            } else if ("--db-url".equals(args[i]) && i + 1 < args.length) {
+                dbUrl = args[++i];
+            } else if ("--db-user".equals(args[i]) && i + 1 < args.length) {
+                dbUser = args[++i];
+            } else if ("--db-pass".equals(args[i]) && i + 1 < args.length) {
+                dbPass = args[++i];
+            } else if ("--db-driver".equals(args[i]) && i + 1 < args.length) {
+                dbDriver = args[++i];
             }
         }
 
         if (templatePath == null || outputPath == null) {
-            System.err.println("Usage: JasperRunner --template <file.jrxml> --params <json_string_or_file> --data <data.json> --output <out.pdf> [--format pdf]");
+            System.err.println("Usage: JasperRunner --template <file.jrxml> --params <json_string_or_file> [--data <data.json>] [--db-url <jdbc:mysql:...>] [--db-user <user>] [--db-pass <pass>] --output <out.pdf> [--format pdf]");
             System.exit(1);
         }
 
@@ -90,12 +104,28 @@ public class JasperRunner {
                 }
             }
 
-            // Prepare Data Source
+            // Prepare Data Source: Detect if report uses SQL Query or JSON DataSource
             JasperPrint jasperPrint;
-            if (dataPath != null && new File(dataPath).exists()) {
+            boolean hasQuery = jasperReport.getQuery() != null 
+                && jasperReport.getQuery().getText() != null 
+                && !jasperReport.getQuery().getText().trim().isEmpty();
+
+            if (hasQuery && dbUrl != null && !dbUrl.trim().isEmpty()) {
+                System.out.println("Executing report with direct MySQL JDBC connection (Query detected in template)...");
+                Class.forName(dbDriver != null ? dbDriver : "com.mysql.cj.jdbc.Driver");
+                try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass != null ? dbPass : "")) {
+                    jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
+                }
+            } else if (dataPath != null && new File(dataPath).exists()) {
                 File dataFile = new File(dataPath);
                 JsonDataSource ds = new JsonDataSource(dataFile);
                 jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, ds);
+            } else if (dbUrl != null && !dbUrl.trim().isEmpty()) {
+                System.out.println("Executing report with direct MySQL JDBC connection...");
+                Class.forName(dbDriver != null ? dbDriver : "com.mysql.cj.jdbc.Driver");
+                try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass != null ? dbPass : "")) {
+                    jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
+                }
             } else {
                 jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
             }
