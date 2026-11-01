@@ -355,35 +355,30 @@
 
         <!-- SIDEBAR NAVIGATION -->
         <aside id="app-sidebar">
-            <!-- Sidebar Header & Hub Brand -->
+            @php
+                $navSchool = $currentSchool ?? (\App\Models\School::where('school_id', session('active_school_id') ?? (auth()->check() ? auth()->user()->school_id : null))->first() ?? \App\Models\School::first());
+            @endphp
+
+            <!-- Sidebar Header & School Brand -->
             <div class="sidebar-header">
-                <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-decoration-none min-w-0" style="gap: 10px;">
-                    <span class="navbar-brand-badge flex-shrink-0">SR</span>
+                <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-decoration-none min-w-0" style="gap: 10px;" title="{{ $navSchool->school_name ?? 'School Reporting' }}">
+                    @if($navSchool && $navSchool->hasCustomLogo())
+                        <img src="{{ $navSchool->getLogoBase64() ?? $navSchool->getLogoUrl() }}" alt="{{ $navSchool->school_name }}" class="rounded-2 border bg-white p-1 shadow-2xs flex-shrink-0" style="height: 38px; width: 38px; object-fit: contain;">
+                    @else
+                        <span class="navbar-brand-badge flex-shrink-0">{{ $navSchool ? substr($navSchool->school_code, 0, 2) : 'SR' }}</span>
+                    @endif
                     <div class="d-flex flex-column overflow-hidden">
-                        <span class="fw-bold text-dark lh-sm text-truncate" style="font-size: 0.95rem; letter-spacing: -0.2px;">School Reporting</span>
-                        <span class="text-muted text-truncate" style="font-size: 0.72rem; font-weight: 500;">Department Hub</span>
+                        <span class="fw-bold text-dark lh-sm text-truncate" style="font-size: 0.92rem; letter-spacing: -0.2px;">
+                            {{ $navSchool ? $navSchool->school_name : 'School Reporting' }}
+                        </span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-indigo-subtle text-indigo px-1 py-0" style="font-size: 0.62rem;">{{ $navSchool ? $navSchool->school_code : 'HUB' }} Tenant</span>
+                            <span class="text-muted" style="font-size: 0.68rem;">• Portal</span>
+                        </div>
                     </div>
                 </a>
                 <button type="button" class="btn-close d-lg-none ms-2" id="btnCloseSidebar" aria-label="Close"></button>
             </div>
-
-            <!-- Active School Mini Card -->
-            @php
-                $navSchool = $currentSchool ?? (\App\Models\School::where('school_id', session('active_school_id') ?? (auth()->check() ? auth()->user()->school_id : null))->first() ?? \App\Models\School::first());
-            @endphp
-            @if($navSchool)
-                <div class="px-3 pt-3 pb-1">
-                    <a href="{{ route('school.profile') }}" class="text-decoration-none d-block">
-                        <div class="p-2 border rounded-3 bg-light d-flex align-items-center gap-2 hover-shadow-sm transition">
-                            <img src="{{ $navSchool->getLogoBase64() ?? $navSchool->getLogoUrl() }}" alt="{{ $navSchool->school_name }}" class="rounded border bg-white p-0.5 shadow-2xs flex-shrink-0" style="height: 32px; width: 32px; object-fit: contain;">
-                            <div class="overflow-hidden">
-                                <div class="fw-bold text-dark small text-truncate" title="{{ $navSchool->school_name }}">{{ $navSchool->school_name }}</div>
-                                <span class="badge bg-indigo-subtle text-indigo px-1 py-0" style="font-size: 0.62rem;">{{ $navSchool->school_code }} Tenant</span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            @endif
 
             <!-- Navigation Links Organized by Functionality -->
             <nav class="sidebar-nav-container">
@@ -480,8 +475,12 @@
                     <nav aria-label="breadcrumb" class="d-none d-sm-block">
                         <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.85rem;">
                             <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-1">
-                                    <span>🏛️</span>
+                                <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-1.5">
+                                    @if($navSchool && $navSchool->hasCustomLogo())
+                                        <img src="{{ $navSchool->getLogoBase64() ?? $navSchool->getLogoUrl() }}" alt="{{ $navSchool->school_name }}" class="rounded bg-white p-0.5 border shadow-2xs flex-shrink-0" style="height: 18px; width: 18px; object-fit: contain;">
+                                    @else
+                                        <span>🏛️</span>
+                                    @endif
                                     <span>{{ $navSchool->school_name ?? 'School' }}</span>
                                 </a>
                             </li>
