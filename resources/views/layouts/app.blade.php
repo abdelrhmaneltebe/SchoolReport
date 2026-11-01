@@ -20,16 +20,19 @@
             overflow-x: hidden;
         }
         .navbar-brand-badge {
-            background-color: #4f46e5;
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
             color: white;
             font-weight: 700;
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 0.95rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
         }
         .card-custom {
             border: 1px solid #e2e8f0;
@@ -211,8 +214,13 @@
         }
 
         .sidebar-header {
-            padding: 1.15rem 1.25rem 1rem 1.25rem;
-            border-bottom: 1px solid #f1f5f9;
+            height: 64px;
+            min-height: 64px;
+            padding: 0 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sidebar-nav-container {
@@ -271,13 +279,31 @@
         }
 
         .app-topbar {
+            height: 64px;
+            min-height: 64px;
             background-color: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            padding: 0.75rem 1.5rem;
+            padding: 0 1.5rem;
             position: sticky;
             top: 0;
             z-index: 1020;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .shadow-2xs {
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .gap-2\.5 {
+            gap: 0.625rem !important;
+        }
+
+        .px-2\.5 {
+            padding-left: 0.625rem !important;
+            padding-right: 0.625rem !important;
         }
 
         .app-body-content {
@@ -330,15 +356,15 @@
         <!-- SIDEBAR NAVIGATION -->
         <aside id="app-sidebar">
             <!-- Sidebar Header & Hub Brand -->
-            <div class="sidebar-header d-flex align-items-center justify-content-between">
-                <a href="{{ route('dashboard') }}" class="d-flex align-items-center gap-2.5 text-decoration-none">
-                    <span class="navbar-brand-badge">SR</span>
-                    <div>
-                        <div class="fw-bold text-dark lh-1" style="font-size: 0.95rem;">School Reporting</div>
-                        <small class="text-muted" style="font-size: 0.72rem;">Department Hub</small>
+            <div class="sidebar-header">
+                <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-decoration-none min-w-0" style="gap: 10px;">
+                    <span class="navbar-brand-badge flex-shrink-0">SR</span>
+                    <div class="d-flex flex-column overflow-hidden">
+                        <span class="fw-bold text-dark lh-sm text-truncate" style="font-size: 0.95rem; letter-spacing: -0.2px;">School Reporting</span>
+                        <span class="text-muted text-truncate" style="font-size: 0.72rem; font-weight: 500;">Department Hub</span>
                     </div>
                 </a>
-                <button type="button" class="btn-close d-lg-none" id="btnCloseSidebar" aria-label="Close"></button>
+                <button type="button" class="btn-close d-lg-none ms-2" id="btnCloseSidebar" aria-label="Close"></button>
             </div>
 
             <!-- Active School Mini Card -->
@@ -445,20 +471,20 @@
         <!-- MAIN PAGE WRAPPER -->
         <div id="app-main">
             <!-- Topbar Header -->
-            <header class="app-topbar d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-3">
+            <header class="app-topbar">
+                <div class="d-flex align-items-center" style="gap: 12px;">
                     <!-- Mobile Sidebar Toggle -->
-                    <button type="button" class="btn btn-outline-secondary btn-sm d-lg-none" id="btnSidebarToggle">
-                        ☰
+                    <button type="button" class="btn btn-sm btn-light border d-lg-none" id="btnSidebarToggle" title="Toggle Navigation Menu">
+                        <span style="font-size: 1.1rem; line-height: 1;">☰</span>
                     </button>
                     <div>
-                        <h6 class="mb-0 fw-bold text-dark d-none d-sm-block">School Reporting Department Hub</h6>
-                        <small class="text-muted d-none d-md-block" style="font-size: 0.75rem;">Multi-Tenant Gradebook &amp; JasperReports Ingestion Engine</small>
+                        <h6 class="mb-0 fw-bold text-dark d-none d-sm-block" style="font-size: 0.95rem; letter-spacing: -0.2px;">School Reporting Department Hub</h6>
+                        <small class="text-muted d-none d-md-block" style="font-size: 0.74rem;">Multi-Tenant Academic &amp; JasperReports Ingestion Engine</small>
                     </div>
                 </div>
 
                 <!-- Topbar Right Controls -->
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center" style="gap: 16px;">
                     @auth
                         @if(auth()->user()->isSuperAdmin())
                             <div class="d-none d-md-flex align-items-center gap-2">
@@ -474,17 +500,20 @@
                         @endif
 
                         <!-- User Profile & Sign Out -->
-                        <div class="d-flex align-items-center gap-2.5 border-start ps-3">
-                            <div class="text-end d-none d-sm-block">
-                                <div class="fw-bold small text-dark lh-1">{{ auth()->user()->name }}</div>
-                                <span class="badge {{ auth()->user()->isSuperAdmin() ? 'bg-dark text-white' : 'bg-primary text-white' }} mt-1" style="font-size: 0.62rem;">
+                        <div class="d-flex align-items-center ps-3 border-start" style="gap: 14px;">
+                            <div class="text-end d-none d-sm-flex flex-column justify-content-center align-items-end lh-sm">
+                                <span class="fw-bold text-dark small text-truncate" style="max-width: 160px; font-size: 0.85rem;">
+                                    {{ auth()->user()->name }}
+                                </span>
+                                <span class="badge {{ auth()->user()->isSuperAdmin() ? 'bg-dark text-white' : 'bg-primary text-white' }} mt-1 px-2 py-0.5 rounded-pill" style="font-size: 0.65rem; letter-spacing: 0.3px;">
                                     {{ auth()->user()->isSuperAdmin() ? '👑 SUPER ADMIN' : '🏫 SCHOOL ADMIN' }}
                                 </span>
                             </div>
-                            <form action="{{ route('logout') }}" method="POST" class="d-inline mb-0">
+                            <form action="{{ route('logout') }}" method="POST" class="m-0 p-0 flex-shrink-0">
                                 @csrf
-                                <button type="submit" class="btn btn-sm btn-outline-secondary py-1 px-2.5 fw-semibold" title="Sign Out">
-                                    🚪 Exit
+                                <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center px-2.5 py-1 fw-semibold shadow-2xs" style="font-size: 0.82rem; border-radius: 8px; gap: 6px; border-color: #fca5a5;" title="Sign out of system">
+                                    <span>🚪</span>
+                                    <span>Exit</span>
                                 </button>
                             </form>
                         </div>
