@@ -477,14 +477,25 @@ class ReportAnalyticsService
         $cogniaBase64 = file_exists($cogniaPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($cogniaPath)) : null;
         $footerBase64 = file_exists($footerPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($footerPath)) : null;
 
+        $customJrxml = storage_path('app/schools/SCH-SGIS-GAM/reports/custom/sgis_report_card_a4.jrxml');
+        if (!file_exists($customJrxml)) {
+            $customJrxml = base_path('reporting-engine/templates/sgis_report_card_a4.jrxml');
+        }
+        $jrxmlDefaults = $this->parseJrxmlDefaultValues($customJrxml);
+
+        $schoolName = $jrxmlDefaults['P_SCHOOL_NAME'] ?? ($school ? $school->school_name : 'SUN OF GLORY INTERNATIONAL SCHOOL');
+        $reportTitle = $jrxmlDefaults['P_REPORT_TITLE'] ?? 'Report Card 2025/2026';
+        $legalRep = $jrxmlDefaults['P_LEGAL_REP_NAME'] ?? 'Mohamed Tayseer Mattar';
+        $director = $jrxmlDefaults['P_DIRECTOR_NAME'] ?? 'Ragia Al Akhal';
+
         return [
             'school' => [
-                'name' => 'SUN OF GLORY INTERNATIONAL SCHOOL',
-                'code' => 'SGIS',
+                'name' => $schoolName,
+                'code' => $school ? $school->school_code : 'SGIS',
                 'academicYear' => '2025/2026',
-                'reportTitle' => 'Report Card 2025/2026',
-                'legalRep' => 'Mohamed Tayseer Mattar',
-                'director' => 'Ragia Al Akhal',
+                'reportTitle' => $reportTitle,
+                'legalRep' => $legalRep,
+                'director' => $director,
                 'logoPath' => $logoPath,
                 'cogniaPath' => $cogniaPath,
                 'footerPath' => $footerPath,
@@ -533,6 +544,26 @@ class ReportAnalyticsService
         if ($rounded >= 63) return ['grade' => 'D',  'gpa' => 1.0];
         if ($rounded >= 60) return ['grade' => 'D-', 'gpa' => 0.7];
         return ['grade' => 'F', 'gpa' => 0.0];
+    }
+
+    /**
+     * Parse any custom parameter default values from a JRXML template.
+     */
+    public function parseJrxmlDefaultValues(string $jrxmlPath): array
+    {
+        $defaults = [];
+        if (!file_exists($jrxmlPath)) {
+            return $defaults;
+        }
+
+        $content = file_get_contents($jrxmlPath);
+        if (preg_match_all('/<parameter\s+name="([^"]+)"[^>]*>\s*<defaultValueExpression><!\[CDATA\["?(.*?)"?\]\]><\/defaultValueExpression>/s', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $defaults[$m[1]] = trim($m[2], '"');
+            }
+        }
+
+        return $defaults;
     }
 
     /**

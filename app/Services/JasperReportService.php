@@ -67,6 +67,24 @@ class JasperReportService
             throw new \InvalidArgumentException("Jasper template not found: {$jrxmlFile}");
         }
 
+        // Auto-detect if .jrxml was modified and recompile .jasper binary on the fly
+        $candidateJrxml = str_ends_with($jrxmlFile, '.jasper')
+            ? substr($jrxmlFile, 0, -7) . '.jrxml'
+            : (str_ends_with($jrxmlFile, '.jrxml') ? $jrxmlFile : $jrxmlFile . '.jrxml');
+
+        $candidateJasper = str_ends_with($jrxmlFile, '.jasper')
+            ? $jrxmlFile
+            : (str_ends_with($jrxmlFile, '.jrxml') ? substr($jrxmlFile, 0, -6) . '.jasper' : $jrxmlFile . '.jasper');
+
+        if (file_exists($candidateJrxml)) {
+            if (!file_exists($candidateJasper) || filemtime($candidateJrxml) > filemtime($candidateJasper)) {
+                app(ReportDeploymentService::class)->compileJrxmlFile($candidateJrxml);
+            }
+            if (file_exists($candidateJasper)) {
+                $jrxmlFile = $candidateJasper;
+            }
+        }
+
         // Auto-inject SUBREPORT_DIR and IMAGE_DIR if adjacent directories exist
         $parentDir = dirname($jrxmlFile);
         $subDir = $parentDir . DIRECTORY_SEPARATOR . 'subreports' . DIRECTORY_SEPARATOR;

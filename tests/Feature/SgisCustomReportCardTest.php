@@ -46,7 +46,7 @@ class SgisCustomReportCardTest extends TestCase
         $analytics = app(ReportAnalyticsService::class);
         $data = $analytics->buildSgisTrimesterCardData($student);
 
-        $this->assertEquals('SUN OF GLORY INTERNATIONAL SCHOOL', $data['school']['name']);
+        $this->assertEquals('SUN OF GLORY AM SCHOOL', $data['school']['name']);
         $this->assertNotEmpty($data['subjectRows']);
         $this->assertArrayHasKey('totalCredits', $data['metrics']);
         $this->assertArrayHasKey('gpa', $data['metrics']);
@@ -66,7 +66,7 @@ class SgisCustomReportCardTest extends TestCase
         $response = $this->get(route('reports.card.single', ['student' => $student->id]));
         $response->assertStatus(200);
         $response->assertViewIs('reports.sgis_card');
-        $response->assertSee('SUN OF GLORY INTERNATIONAL SCHOOL');
+        $response->assertSee('SUN OF GLORY AM SCHOOL');
         $response->assertSee('Report Card 2025/2026');
         $response->assertSee('Summer Course');
         $response->assertSee('Legal Representative');

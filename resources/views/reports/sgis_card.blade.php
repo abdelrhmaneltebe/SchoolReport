@@ -118,8 +118,8 @@
                 <img src="{{ $data['school']['logoUrl'] }}" alt="SGIS Crest" style="max-height: 80px; max-width: 100px; object-fit: contain;">
             </div>
             <div class="text-center flex-grow-1 px-2">
-                <h4 class="fw-bold mb-1" style="letter-spacing: 0.5px; font-size: 1.25rem;">SUN OF GLORY INTERNATIONAL SCHOOL</h4>
-                <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;">Report Card 2025/2026</h5>
+                <h4 class="fw-bold mb-1" style="letter-spacing: 0.5px; font-size: 1.25rem;">{{ $data['school']['name'] }}</h4>
+                <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;">{{ $data['school']['reportTitle'] }}</h5>
             </div>
             <div style="width: 110px;" class="text-end">
                 <img src="{{ $data['school']['cogniaBase64'] ?? asset('reporting-engine/templates/images/cognia_seal.png') }}" 
@@ -273,7 +273,7 @@
 
         <!-- Accreditation Notice -->
         <div class="text-center fst-italic my-2" style="font-size: 0.72rem; color: #1e293b;">
-            Sun of Glory International School is accredited by NCA CASI, NWAC and SACS CASI, accreditation divisions of Cognia (AdvancED)
+            {{ $data['school']['name'] }} is accredited by NCA CASI, NWAC and SACS CASI, accreditation divisions of Cognia (AdvancED)
         </div>
 
         <!-- Footer Strip -->
