@@ -24,7 +24,7 @@
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
                 <div class="d-flex align-items-center gap-3">
-                    <img src="{{ $school->getLogoUrl() }}" alt="{{ $school->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 60px; width: auto; max-width: 120px; object-fit: contain;">
+                    <img src="{{ $school->getLogoBase64() ?? $school->getLogoUrl() }}" alt="{{ $school->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 60px; width: auto; max-width: 120px; object-fit: contain;">
                     <div class="text-start">
                         <div class="text-uppercase tracking-widest text-primary fw-bold small">Official Student Progress Report</div>
                         <h3 class="fw-bold my-1 text-dark">{{ $school->school_name }}</h3>

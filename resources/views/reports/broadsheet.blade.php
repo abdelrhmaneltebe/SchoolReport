@@ -10,7 +10,7 @@
                 $activeSch = $selectedClass ? \App\Models\School::where('school_id', $selectedClass->school_id)->first() : null;
             @endphp
             @if($activeSch)
-                <img src="{{ $activeSch->getLogoUrl() }}" alt="{{ $activeSch->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 52px; width: auto; max-width: 100px; object-fit: contain;">
+                <img src="{{ $activeSch->getLogoBase64() ?? $activeSch->getLogoUrl() }}" alt="{{ $activeSch->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 52px; width: auto; max-width: 100px; object-fit: contain;">
             @endif
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">

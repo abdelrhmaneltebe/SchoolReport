@@ -95,7 +95,7 @@ class School extends Model
         // Check default report images directory for logo file
         $customImagesDir = $this->getCustomReportsDirectory() . DIRECTORY_SEPARATOR . 'images';
         if (is_dir($customImagesDir)) {
-            $candidates = glob($customImagesDir . DIRECTORY_SEPARATOR . 'logo.{png,jpg,jpeg,svg,webp}', GLOB_BRACE);
+            $candidates = glob($customImagesDir . DIRECTORY_SEPARATOR . 'logo*.{png,jpg,jpeg,svg,webp}', GLOB_BRACE);
             if (!empty($candidates)) {
                 return $candidates[0];
             }
@@ -113,11 +113,13 @@ class School extends Model
     }
 
     /**
-     * Get URL to view/serve the school logo.
+     * Get URL to view/serve the school logo with automatic cache-busting.
      */
     public function getLogoUrl(): string
     {
-        return route('schools.logo', $this->school_id);
+        $diskPath = $this->getLogoDiskPath();
+        $version = $diskPath && file_exists($diskPath) ? filemtime($diskPath) : ($this->updated_at ? $this->updated_at->timestamp : time());
+        return route('schools.logo', $this->school_id) . '?v=' . $version;
     }
 
     /**

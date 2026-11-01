@@ -48,7 +48,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-3">
                 <a href="{{ route('school.profile') }}" title="Click to manage School Profile & Logo">
-                    <img src="{{ $activeSchool->getLogoUrl() }}" alt="{{ $activeSchool->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 56px; width: auto; max-width: 110px; object-fit: contain;">
+                    <img src="{{ $activeSchool->getLogoBase64() ?? $activeSchool->getLogoUrl() }}" alt="{{ $activeSchool->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 56px; width: auto; max-width: 110px; object-fit: contain;">
                 </a>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">

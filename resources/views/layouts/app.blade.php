@@ -375,7 +375,7 @@
                 <div class="px-3 pt-3 pb-1">
                     <a href="{{ route('school.profile') }}" class="text-decoration-none d-block">
                         <div class="p-2 border rounded-3 bg-light d-flex align-items-center gap-2 hover-shadow-sm transition">
-                            <img src="{{ $navSchool->getLogoUrl() }}" alt="{{ $navSchool->school_name }}" class="rounded border bg-white p-0.5 shadow-2xs flex-shrink-0" style="height: 32px; width: 32px; object-fit: contain;">
+                            <img src="{{ $navSchool->getLogoBase64() ?? $navSchool->getLogoUrl() }}" alt="{{ $navSchool->school_name }}" class="rounded border bg-white p-0.5 shadow-2xs flex-shrink-0" style="height: 32px; width: 32px; object-fit: contain;">
                             <div class="overflow-hidden">
                                 <div class="fw-bold text-dark small text-truncate" title="{{ $navSchool->school_name }}">{{ $navSchool->school_name }}</div>
                                 <span class="badge bg-indigo-subtle text-indigo px-1 py-0" style="font-size: 0.62rem;">{{ $navSchool->school_code }} Tenant</span>
@@ -477,10 +477,19 @@
                     <button type="button" class="btn btn-sm btn-light border d-lg-none" id="btnSidebarToggle" title="Toggle Navigation Menu">
                         <span style="font-size: 1.1rem; line-height: 1;">☰</span>
                     </button>
-                    <div>
-                        <h6 class="mb-0 fw-bold text-dark d-none d-sm-block" style="font-size: 0.95rem; letter-spacing: -0.2px;">School Reporting Department Hub</h6>
-                        <small class="text-muted d-none d-md-block" style="font-size: 0.74rem;">Multi-Tenant Academic &amp; JasperReports Ingestion Engine</small>
-                    </div>
+                    <nav aria-label="breadcrumb" class="d-none d-sm-block">
+                        <ol class="breadcrumb mb-0 align-items-center" style="font-size: 0.85rem;">
+                            <li class="breadcrumb-item text-muted">
+                                <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-1">
+                                    <span>🏛️</span>
+                                    <span>{{ $navSchool->school_name ?? 'School' }}</span>
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">
+                                @yield('title', 'Workspace')
+                            </li>
+                        </ol>
+                    </nav>
                 </div>
 
                 <!-- Topbar Right Controls -->

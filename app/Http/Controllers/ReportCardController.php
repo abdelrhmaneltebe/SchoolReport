@@ -153,10 +153,11 @@ class ReportCardController extends Controller
         }
         unset($row);
 
+        $logoDiskPath = $school->getLogoDiskPath();
         $parameters = [
             'P_SCHOOL_NAME' => $school->school_name,
             'P_SCHOOL_CODE' => $school->school_code,
-            'P_LOGO_PATH' => '',
+            'P_LOGO_PATH' => $logoDiskPath ? str_replace('\\', '/', $logoDiskPath) : '',
             'P_PRINCIPAL_SIGNATURE' => '',
             'P_ACADEMIC_YEAR' => '2026-2027',
             'P_TERM_NAME' => 'Term 1 Final',

@@ -570,11 +570,11 @@ class ReportStudioController extends Controller
                 'P_ABSENT_T1' => (string)$sgisData['attendance']['t1'],
                 'P_ABSENT_T2' => (string)$sgisData['attendance']['t2'],
                 'P_ABSENT_T3' => (string)$sgisData['attendance']['t3'],
-                'P_LOGO_PATH' => $sgisData['school']['logoPath'],
-                'P_COGNIA_LOGO_PATH' => $sgisData['school']['cogniaPath'],
+                'P_LOGO_PATH' => str_replace('\\', '/', $sgisData['school']['logoPath'] ?? $school->getLogoDiskPath() ?? ''),
+                'P_COGNIA_LOGO_PATH' => str_replace('\\', '/', $sgisData['school']['cogniaPath'] ?? ''),
                 'P_LEGAL_REP_NAME' => $sgisData['school']['legalRep'],
                 'P_DIRECTOR_NAME' => $sgisData['school']['director'],
-                'P_FOOTER_ADDRESS_IMAGE' => $sgisData['school']['footerPath'],
+                'P_FOOTER_ADDRESS_IMAGE' => str_replace('\\', '/', $sgisData['school']['footerPath'] ?? ''),
             ];
 
             $outputPath = storage_path("app/schools/{$school->school_id}/exports/{$student->admission_number}.pdf");
@@ -606,9 +606,11 @@ class ReportStudioController extends Controller
             }
         }
 
+        $logoDiskPath = $school->getLogoDiskPath();
         $parameters = [
             'P_SCHOOL_NAME' => $school->school_name,
             'P_SCHOOL_CODE' => $school->school_code,
+            'P_LOGO_PATH' => $logoDiskPath ? str_replace('\\', '/', $logoDiskPath) : '',
             'P_ACADEMIC_YEAR' => '2026-2027',
             'P_TERM_NAME' => 'Annual Term',
             'P_SCALE_NAME' => $school->active_scale_model ?? 'Standard Scale'

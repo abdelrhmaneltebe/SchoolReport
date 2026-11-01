@@ -115,7 +115,7 @@
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div style="width: 110px;">
-                <img src="{{ $data['school']['logoUrl'] }}" alt="SGIS Crest" style="max-height: 80px; max-width: 100px; object-fit: contain;">
+                <img src="{{ $data['school']['logoBase64'] ?? $data['school']['logoUrl'] }}" alt="School Logo" style="max-height: 80px; max-width: 100px; object-fit: contain;">
             </div>
             <div class="text-center flex-grow-1 px-2">
                 <h4 class="fw-bold mb-1" style="letter-spacing: 0.5px; font-size: 1.25rem;">{{ $data['school']['name'] }}</h4>

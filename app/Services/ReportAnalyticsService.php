@@ -463,19 +463,33 @@ class ReportAnalyticsService
         $summerCoursesString = implode(', ', $summerCoursesList);
         $overallGpa = $totalCredits > 0 ? round($weightedGpaPoints / $totalCredits, 2) : 0.0;
 
+        $logoDiskPath = $school ? $school->getLogoDiskPath() : null;
+        if (!$logoDiskPath || !file_exists($logoDiskPath)) {
+            $customDir = storage_path('app/schools/SCH-SGIS-GAM/reports/custom/images');
+            $logoDiskPath = file_exists($customDir . '/logo.png') 
+                ? $customDir . '/logo.png' 
+                : base_path('reporting-engine/templates/images/logo.png');
+        }
+
+        $logoPath = $logoDiskPath ? str_replace('\\', '/', $logoDiskPath) : '';
+        $logoBase64 = $school ? $school->getLogoBase64() : null;
+        if (!$logoBase64 && $logoDiskPath && file_exists($logoDiskPath)) {
+            $logoBase64 = 'data:image/' . pathinfo($logoDiskPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($logoDiskPath));
+        }
+
         $customDir = storage_path('app/schools/SCH-SGIS-GAM/reports/custom/images');
-        $logoPath = file_exists($customDir . '/logo.png') 
-            ? $customDir . '/logo.png' 
-            : base_path('reporting-engine/templates/images/logo.png');
-        $cogniaPath = file_exists($customDir . '/cognia_seal.png') 
+        $cogniaDiskPath = file_exists($customDir . '/cognia_seal.png') 
             ? $customDir . '/cognia_seal.png' 
             : base_path('reporting-engine/templates/images/cognia_seal.png');
-        $footerPath = file_exists($customDir . '/footer_address.png') 
+        $footerDiskPath = file_exists($customDir . '/footer_address.png') 
             ? $customDir . '/footer_address.png' 
             : base_path('reporting-engine/templates/images/footer_address.png');
 
-        $cogniaBase64 = file_exists($cogniaPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($cogniaPath)) : null;
-        $footerBase64 = file_exists($footerPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($footerPath)) : null;
+        $cogniaPath = str_replace('\\', '/', $cogniaDiskPath);
+        $footerPath = str_replace('\\', '/', $footerDiskPath);
+
+        $cogniaBase64 = file_exists($cogniaDiskPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($cogniaDiskPath)) : null;
+        $footerBase64 = file_exists($footerDiskPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($footerDiskPath)) : null;
 
         $customJrxml = storage_path('app/schools/SCH-SGIS-GAM/reports/custom/sgis_report_card_a4.jrxml');
         if (!file_exists($customJrxml)) {
@@ -499,9 +513,11 @@ class ReportAnalyticsService
                 'logoPath' => $logoPath,
                 'cogniaPath' => $cogniaPath,
                 'footerPath' => $footerPath,
+                'logoBase64' => $logoBase64,
                 'cogniaBase64' => $cogniaBase64,
                 'footerBase64' => $footerBase64,
                 'logoUrl' => $school ? $school->getLogoUrl() : asset('images/default_logo.png'),
+                'hasLogo' => $school ? $school->hasCustomLogo() : false,
             ],
             'student' => [
                 'id' => $student->id,

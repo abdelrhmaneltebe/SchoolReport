@@ -202,7 +202,7 @@ class SchoolLogoAndBrandingTest extends TestCase
 
         $this->assertTrue($firstCard['school']['hasLogo']);
         $this->assertNotNull($firstCard['school']['logoBase64']);
-        $this->assertEquals(route('schools.logo', $this->school->school_id), $firstCard['school']['logoUrl']);
+        $this->assertStringStartsWith(route('schools.logo', $this->school->school_id), $firstCard['school']['logoUrl']);
     }
 
     public function test_school_admin_can_remove_custom_logo()

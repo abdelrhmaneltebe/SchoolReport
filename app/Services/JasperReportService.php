@@ -130,6 +130,13 @@ class JasperReportService
             mkdir($outputDir, 0755, true);
         }
 
+        // Normalize any Windows backslashes in path parameters to forward slashes for cross-platform Java compatibility
+        foreach ($parameters as $key => $val) {
+            if (is_string($val) && str_contains($val, '\\')) {
+                $parameters[$key] = str_replace('\\', '/', $val);
+            }
+        }
+
         // Write temporary JSON data payload & parameters payload to avoid shell escape issues
         $tempDataFile = storage_path('app' . DIRECTORY_SEPARATOR . 'temp_' . uniqid('jasper_') . '.json');
         $tempParamsFile = storage_path('app' . DIRECTORY_SEPARATOR . 'temp_params_' . uniqid('jasper_') . '.json');

@@ -13,7 +13,7 @@ class SchoolProfileController extends Controller
      */
     public function showLogo(string $schoolId)
     {
-        $school = School::where('school_id', $schoolId)->first();
+        $school = School::where('school_id', $schoolId)->orWhere('school_code', $schoolId)->first();
 
         if ($school && $school->hasCustomLogo()) {
             $path = $school->getLogoDiskPath();
@@ -28,7 +28,9 @@ class SchoolProfileController extends Controller
                 };
                 return response()->file($path, [
                     'Content-Type' => $mime,
-                    'Cache-Control' => 'no-cache, private'
+                    'Cache-Control' => 'no-cache, private, must-revalidate',
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
                 ]);
             }
         }
@@ -58,7 +60,9 @@ SVG;
 
         return response($svg, 200, [
             'Content-Type' => 'image/svg+xml',
-            'Cache-Control' => 'public, max-age=3600'
+            'Cache-Control' => 'no-cache, private, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
         ]);
     }
 

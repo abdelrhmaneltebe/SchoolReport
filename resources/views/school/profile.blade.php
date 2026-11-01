@@ -8,7 +8,7 @@
     <div class="card border rounded-3 p-4 mb-4 bg-white shadow-xs">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-3">
-                <img src="{{ $activeSchool->getLogoUrl() }}?v={{ time() }}" alt="{{ $activeSchool->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 60px; width: auto; max-width: 120px; object-fit: contain;">
+                <img src="{{ $activeSchool->getLogoBase64() ?? $activeSchool->getLogoUrl() }}" alt="{{ $activeSchool->school_name }}" class="rounded-3 border bg-white p-1 shadow-2xs" style="height: 60px; width: auto; max-width: 120px; object-fit: contain;">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="badge bg-primary text-white px-2 py-1 small">Institutional Branding</span>
@@ -55,7 +55,7 @@
                 <div class="text-center p-4 bg-light rounded-3 border mb-3">
                     <div class="mb-3 d-flex justify-content-center">
                         <div class="p-3 bg-white rounded-3 border shadow-2xs d-inline-block" style="min-width: 140px; min-height: 140px;">
-                            <img id="logoPreviewImg" src="{{ $activeSchool->getLogoUrl() }}?v={{ time() }}" alt="{{ $activeSchool->school_name }}" style="max-height: 120px; max-width: 220px; object-fit: contain;">
+                            <img id="logoPreviewImg" src="{{ $activeSchool->getLogoBase64() ?? $activeSchool->getLogoUrl() }}" alt="{{ $activeSchool->school_name }}" style="max-height: 120px; max-width: 220px; object-fit: contain;">
                         </div>
                     </div>
                     <div class="small fw-bold text-dark" id="logoStatusText">
@@ -108,7 +108,7 @@
                 <div class="p-3 border rounded-3 bg-white shadow-2xs">
                     <div class="d-flex justify-content-between align-items-center pb-2 border-bottom border-2 border-dark">
                         <div class="d-flex align-items-center gap-3">
-                            <img id="liveReportLogo" src="{{ $activeSchool->getLogoUrl() }}?v={{ time() }}" alt="{{ $activeSchool->school_name }}" class="rounded-2 border bg-white p-1" style="height: 52px; width: auto; max-width: 100px; object-fit: contain;">
+                            <img id="liveReportLogo" src="{{ $activeSchool->getLogoBase64() ?? $activeSchool->getLogoUrl() }}" alt="{{ $activeSchool->school_name }}" class="rounded-2 border bg-white p-1" style="height: 52px; width: auto; max-width: 100px; object-fit: contain;">
                             <div>
                                 <h6 class="fw-bold mb-0 text-dark font-serif" id="liveReportSchoolName">{{ $activeSchool->school_name }}</h6>
                                 <div class="text-muted" style="font-size: 0.7rem;">
