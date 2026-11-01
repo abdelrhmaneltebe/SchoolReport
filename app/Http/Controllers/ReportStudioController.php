@@ -559,6 +559,11 @@ class ReportStudioController extends Controller
             }
 
             $parameters = [
+                'P_STUDENT_ID' => (int)$student->id,
+                'P_ADMISSION_NUMBER' => (string)$student->admission_number,
+                'P_CLASS_ID' => (int)($student->class_id ?? 0),
+                'P_SCHOOL_ID' => (string)$school->school_id,
+                'P_SCHOOL_CODE' => (string)$school->school_code,
                 'P_SCHOOL_NAME' => $sgisData['school']['name'],
                 'P_REPORT_TITLE' => $sgisData['school']['reportTitle'],
                 'P_STUDENT_NAME' => $sgisData['student']['name'],
@@ -608,9 +613,17 @@ class ReportStudioController extends Controller
 
         $logoDiskPath = $school->getLogoDiskPath();
         $parameters = [
-            'P_SCHOOL_NAME' => $school->school_name,
-            'P_SCHOOL_CODE' => $school->school_code,
+            'P_STUDENT_ID' => (int)$student->id,
+            'P_ADMISSION_NUMBER' => (string)$student->admission_number,
+            'P_STUDENT_NAME' => (string)$student->full_name,
+            'P_CLASS_ID' => (int)($student->class_id ?? 0),
+            'P_CLASS_NAME' => (string)($student->schoolClass ? $student->schoolClass->class_name : ''),
+            'P_HOMEROOM_TEACHER' => (string)($student->schoolClass ? $student->schoolClass->homeroom_teacher : ''),
+            'P_SCHOOL_ID' => (string)$school->school_id,
+            'P_SCHOOL_NAME' => (string)$school->school_name,
+            'P_SCHOOL_CODE' => (string)$school->school_code,
             'P_LOGO_PATH' => $logoDiskPath ? str_replace('\\', '/', $logoDiskPath) : '',
+            'P_PRINCIPAL_SIGNATURE' => '',
             'P_ACADEMIC_YEAR' => '2026-2027',
             'P_TERM_NAME' => 'Annual Term',
             'P_SCALE_NAME' => $school->active_scale_model ?? 'Standard Scale'

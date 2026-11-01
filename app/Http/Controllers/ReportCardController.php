@@ -155,8 +155,14 @@ class ReportCardController extends Controller
 
         $logoDiskPath = $school->getLogoDiskPath();
         $parameters = [
-            'P_SCHOOL_NAME' => $school->school_name,
-            'P_SCHOOL_CODE' => $school->school_code,
+            'P_STUDENT_ID' => (int)$student->id,
+            'P_ADMISSION_NUMBER' => (string)$student->admission_number,
+            'P_STUDENT_NAME' => (string)$student->full_name,
+            'P_CLASS_ID' => (int)($student->class_id ?? 0),
+            'P_CLASS_NAME' => (string)($student->schoolClass ? $student->schoolClass->class_name : ''),
+            'P_SCHOOL_ID' => (string)$school->school_id,
+            'P_SCHOOL_NAME' => (string)$school->school_name,
+            'P_SCHOOL_CODE' => (string)$school->school_code,
             'P_LOGO_PATH' => $logoDiskPath ? str_replace('\\', '/', $logoDiskPath) : '',
             'P_PRINCIPAL_SIGNATURE' => '',
             'P_ACADEMIC_YEAR' => '2026-2027',
