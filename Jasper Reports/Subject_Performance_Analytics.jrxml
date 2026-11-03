@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.10.0.final using JasperReports Library version 6.10.0-unknown  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SubjectPerformanceAnalytics" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7d2a58b0-4f36-4e5a-9b1e-7c8d9e0f1a2b">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SchoolReportsMySQL"/>
+
+	<!-- Parameters from JASPER_PARAMETERS_REFERENCE.md -->
+	<parameter name="P_SCHOOL_ID" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SCH-SGIS-GAM"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_SCHOOL_NAME" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SUN OF GLORY AM SCHOOL"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_SCHOOL_CODE" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SGIS"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_ACADEMIC_YEAR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["2026-2027"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_TERM_NAME" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Term 1"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_REPORT_TITLE" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Department & Subject Performance Analytics"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_DATE" class="java.lang.String">
+		<defaultValueExpression><![CDATA["November 1, 2026"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_LOGO_PATH" class="java.lang.String">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_COGNIA_LOGO_PATH" class="java.lang.String">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_DIRECTOR_NAME" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Ragia Al Akhal"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_LEGAL_REP_NAME" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Mohamed Tayseer Mattar"]]></defaultValueExpression>
+	</parameter>
+
+	<!-- SQL Query for Subject & Department Level Aggregation -->
+	<queryString language="SQL">
+		<![CDATA[SELECT 
+    COALESCE(sub.department, 'General Curriculum') AS department,
+    sub.subject_code AS subjectCode,
+    sub.subject_name AS subjectName,
+    COALESCE(csa.credit_hours, 1.0) AS creditHours,
+    COALESCE(csa.passing_mark, 60.0) AS passingMark,
+    COUNT(gr.id) AS totalEnrolled,
+    ROUND(AVG(COALESCE(gr.cw_score, 0)), 1) AS avgCwScore,
+    ROUND(AVG(COALESCE(gr.exam_score, 0)), 1) AS avgExamScore,
+    ROUND(AVG(COALESCE(gr.total_score, 0)), 1) AS avgTotalScore,
+    ROUND(100.0 * SUM(CASE WHEN COALESCE(gr.total_score, 0) >= COALESCE(csa.passing_mark, 60.0) THEN 1 ELSE 0 END) / COUNT(gr.id), 1) AS passRatePercent,
+    SUM(CASE WHEN gr.letter_grade IN ('A*', 'A') THEN 1 ELSE 0 END) AS countGradeA,
+    SUM(CASE WHEN gr.letter_grade IN ('B+', 'B') THEN 1 ELSE 0 END) AS countGradeB,
+    SUM(CASE WHEN gr.letter_grade IN ('C+', 'C') THEN 1 ELSE 0 END) AS countGradeC,
+    SUM(CASE WHEN gr.letter_grade IN ('D+', 'D') THEN 1 ELSE 0 END) AS countGradeD,
+    SUM(CASE WHEN gr.letter_grade = 'F' OR COALESCE(gr.total_score, 0) < COALESCE(csa.passing_mark, 60.0) THEN 1 ELSE 0 END) AS countGradeFail
+FROM master_subjects sub
+JOIN class_subject_assignments csa ON csa.subject_id = sub.id
+JOIN school_classes c ON csa.class_id = c.id
+JOIN grade_records gr ON gr.class_subject_assignment_id = csa.id
+JOIN students s ON gr.student_id = s.id AND s.class_id = c.id
+WHERE s.school_id = $P{P_SCHOOL_ID}
+  AND gr.academic_cycle = $P{P_ACADEMIC_YEAR}
+  AND gr.term_name = $P{P_TERM_NAME}
+GROUP BY sub.department, sub.id, sub.subject_code, sub.subject_name, csa.credit_hours, csa.passing_mark
+ORDER BY sub.department ASC, avgTotalScore DESC]]>
+	</queryString>
+
+	<!-- Fields mapped to SQL result set -->
+	<field name="department" class="java.lang.String"/>
+	<field name="subjectCode" class="java.lang.String"/>
+	<field name="subjectName" class="java.lang.String"/>
+	<field name="creditHours" class="java.math.BigDecimal"/>
+	<field name="passingMark" class="java.math.BigDecimal"/>
+	<field name="totalEnrolled" class="java.lang.Long"/>
+	<field name="avgCwScore" class="java.math.BigDecimal"/>
+	<field name="avgExamScore" class="java.math.BigDecimal"/>
+	<field name="avgTotalScore" class="java.math.BigDecimal"/>
+	<field name="passRatePercent" class="java.math.BigDecimal"/>
+	<field name="countGradeA" class="java.math.BigDecimal"/>
+	<field name="countGradeB" class="java.math.BigDecimal"/>
+	<field name="countGradeC" class="java.math.BigDecimal"/>
+	<field name="countGradeD" class="java.math.BigDecimal"/>
+	<field name="countGradeFail" class="java.math.BigDecimal"/>
+
+	<!-- Variables for Department & Overall Summaries -->
+	<variable name="V_DEPT_SUBJECT_COUNT" class="java.lang.Integer" resetType="Group" resetGroup="DepartmentGroup" calculation="Count">
+		<variableExpression><![CDATA[$F{subjectCode}]]></variableExpression>
+	</variable>
+	<variable name="V_DEPT_AVG_SCORE" class="java.math.BigDecimal" resetType="Group" resetGroup="DepartmentGroup" calculation="Average">
+		<variableExpression><![CDATA[$F{avgTotalScore}]]></variableExpression>
+	</variable>
+	<variable name="V_TOTAL_ENROLLED_ALL" class="java.lang.Long" calculation="Sum">
+		<variableExpression><![CDATA[$F{totalEnrolled}]]></variableExpression>
+	</variable>
+	<variable name="V_OVERALL_AVG_SCORE" class="java.math.BigDecimal" calculation="Average">
+		<variableExpression><![CDATA[$F{avgTotalScore}]]></variableExpression>
+	</variable>
+
+	<!-- Grouping by Academic Department -->
+	<group name="DepartmentGroup">
+		<groupExpression><![CDATA[$F{department}]]></groupExpression>
+		<groupHeader>
+			<band height="24">
+				<rectangle radius="3">
+					<reportElement x="0" y="3" width="555" height="19" forecolor="#CBD5E1" backcolor="#EEF2FF" uuid="d1e2f3a4-0001-4444-aaaa-bbbbccccdddd"/>
+				</rectangle>
+				<textField>
+					<reportElement x="8" y="5" width="350" height="15" forecolor="#1E1B4B" uuid="d1e2f3a4-0002-4444-aaaa-bbbbccccdddd"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["DEPARTMENT: " + $F{department}.toUpperCase()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="370" y="5" width="175" height="15" forecolor="#4338CA" uuid="d1e2f3a4-0003-4444-aaaa-bbbbccccdddd"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isItalic="true"/>
+					</textElement>
+					<text><![CDATA[Standard Passing Mark: 60.0%]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="18">
+				<rectangle>
+					<reportElement x="0" y="1" width="555" height="15" forecolor="#E2E8F0" backcolor="#F8FAFC" uuid="d1e2f3a4-0004-4444-aaaa-bbbbccccdddd"/>
+				</rectangle>
+				<textField>
+					<reportElement x="8" y="2" width="310" height="13" forecolor="#475569" uuid="d1e2f3a4-0005-4444-aaaa-bbbbccccdddd"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Department Summary: " + $V{V_DEPT_SUBJECT_COUNT} + " Course Offerings"]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.0">
+					<reportElement x="325" y="2" width="60" height="13" forecolor="#1E1B4B" uuid="d1e2f3a4-0006-4444-aaaa-bbbbccccdddd"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{V_DEPT_AVG_SCORE} != null ? $V{V_DEPT_AVG_SCORE} + "%" : "--"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="390" y="2" width="155" height="13" forecolor="#64748B" uuid="d1e2f3a4-0007-4444-aaaa-bbbbccccdddd"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="7" isItalic="true"/>
+					</textElement>
+					<text><![CDATA[Department Average Benchmark]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+
+	<!-- Title Band: Header, Institutional Logos & Session Scope -->
+	<title>
+		<band height="95">
+			<image hAlign="Center" vAlign="Middle" onErrorType="Blank">
+				<reportElement x="2" y="2" width="60" height="60" uuid="a1b2c3d4-1001-4001-8001-000000000001"/>
+				<imageExpression><![CDATA[$P{P_LOGO_PATH}]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="70" y="4" width="415" height="20" forecolor="#0F172A" uuid="a1b2c3d4-1002-4001-8001-000000000002"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{P_SCHOOL_NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="70" y="25" width="415" height="16" forecolor="#312E81" uuid="a1b2c3d4-1003-4001-8001-000000000003"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{P_REPORT_TITLE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="70" y="42" width="415" height="14" forecolor="#64748B" uuid="a1b2c3d4-1004-4001-8001-000000000004"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Academic Cycle: " + $P{P_ACADEMIC_YEAR} + " • Term: " + $P{P_TERM_NAME} + " • Issue Date: " + $P{P_DATE}]]></textFieldExpression>
+			</textField>
+			<image hAlign="Center" vAlign="Middle" onErrorType="Blank">
+				<reportElement x="493" y="2" width="60" height="60" uuid="a1b2c3d4-1005-4001-8001-000000000005"/>
+				<imageExpression><![CDATA[$P{P_COGNIA_LOGO_PATH}]]></imageExpression>
+			</image>
+			
+			<!-- Metric Cards Strip -->
+			<rectangle radius="4">
+				<reportElement x="0" y="67" width="132" height="24" forecolor="#CBD5E1" backcolor="#F8FAFC" uuid="a1b2c3d4-1006-4001-8001-000000000006"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="5" y="69" width="122" height="10" forecolor="#64748B" uuid="a1b2c3d4-1007-4001-8001-000000000007"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="7" isBold="true"/>
+				</textElement>
+				<text><![CDATA[INSTITUTION CODE]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="5" y="78" width="122" height="12" forecolor="#0F172A" uuid="a1b2c3d4-1008-4001-8001-000000000008"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{P_SCHOOL_CODE}]]></textFieldExpression>
+			</textField>
+
+			<rectangle radius="4">
+				<reportElement x="141" y="67" width="132" height="24" forecolor="#CBD5E1" backcolor="#F8FAFC" uuid="a1b2c3d4-1009-4001-8001-000000000009"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="146" y="69" width="122" height="10" forecolor="#64748B" uuid="a1b2c3d4-1010-4001-8001-000000000010"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="7" isBold="true"/>
+				</textElement>
+				<text><![CDATA[REPORT SCOPE]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="146" y="78" width="122" height="12" forecolor="#312E81" uuid="a1b2c3d4-1011-4001-8001-000000000011"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["All Departments"]]></textFieldExpression>
+			</textField>
+
+			<rectangle radius="4">
+				<reportElement x="282" y="67" width="132" height="24" forecolor="#CBD5E1" backcolor="#F8FAFC" uuid="a1b2c3d4-1012-4001-8001-000000000012"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="287" y="69" width="122" height="10" forecolor="#64748B" uuid="a1b2c3d4-1013-4001-8001-000000000013"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="7" isBold="true"/>
+				</textElement>
+				<text><![CDATA[EVALUATION BASIS]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="287" y="78" width="122" height="12" forecolor="#0F172A" uuid="a1b2c3d4-1014-4001-8001-000000000014"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["CW 40% + Exam 60%"]]></textFieldExpression>
+			</textField>
+
+			<rectangle radius="4">
+				<reportElement x="423" y="67" width="132" height="24" forecolor="#CBD5E1" backcolor="#F8FAFC" uuid="a1b2c3d4-1015-4001-8001-000000000015"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="428" y="69" width="122" height="10" forecolor="#64748B" uuid="a1b2c3d4-1016-4001-8001-000000000016"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="7" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MINIMUM BENCHMARK]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="428" y="78" width="122" height="12" forecolor="#059669" uuid="a1b2c3d4-1017-4001-8001-000000000017"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Passing Grade: 60.0%"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+
+	<!-- Column Header Band: Table Columns -->
+	<columnHeader>
+		<band height="22">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="20" forecolor="#0F172A" backcolor="#1E293B" uuid="b1c2d3e4-0001-5001-9001-000000000001"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="5" y="3" width="170" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0002-5001-9001-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[COURSE / SUBJECT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="175" y="3" width="30" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0003-5001-9001-000000000003"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[CR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="205" y="3" width="35" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0004-5001-9001-000000000004"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ENR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="240" y="3" width="45" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0005-5001-9001-000000000005"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[CW AVG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="285" y="3" width="45" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0006-5001-9001-000000000006"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[EX AVG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="330" y="3" width="45" height="14" forecolor="#FDE047" uuid="b1c2d3e4-0007-5001-9001-000000000007"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOT AVG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="375" y="3" width="45" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0008-5001-9001-000000000008"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PASS %]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="420" y="3" width="75" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0009-5001-9001-000000000009"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="7" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DIST (A/B/C/D/F)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="495" y="3" width="60" height="14" forecolor="#FFFFFF" uuid="b1c2d3e4-0010-5001-9001-000000000010"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[EVALUATION]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+
+	<!-- Detail Band: Repeating Subject Records -->
+	<detail>
+		<band height="18">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="17" forecolor="#E2E8F0" backcolor="#FFFFFF" uuid="c1d2e3f4-0001-6001-a001-000000000001"/>
+			</rectangle>
+			<textField>
+				<reportElement x="5" y="2" width="170" height="13" forecolor="#0F172A" uuid="c1d2e3f4-0002-6001-a001-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{subjectCode} + " - " + $F{subjectName}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0">
+				<reportElement x="175" y="2" width="30" height="13" forecolor="#64748B" uuid="c1d2e3f4-0003-6001-a001-000000000003"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{creditHours}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="205" y="2" width="35" height="13" forecolor="#334155" uuid="c1d2e3f4-0004-6001-a001-000000000004"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{totalEnrolled}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0">
+				<reportElement x="240" y="2" width="45" height="13" forecolor="#475569" uuid="c1d2e3f4-0005-6001-a001-000000000005"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{avgCwScore}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0">
+				<reportElement x="285" y="2" width="45" height="13" forecolor="#475569" uuid="c1d2e3f4-0006-6001-a001-000000000006"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{avgExamScore}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0">
+				<reportElement x="330" y="2" width="45" height="13" forecolor="#1E1B4B" uuid="c1d2e3f4-0007-6001-a001-000000000007"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{avgTotalScore} != null ? $F{avgTotalScore} + "%" : "--"]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0">
+				<reportElement x="375" y="2" width="45" height="13" forecolor="#059669" uuid="c1d2e3f4-0008-6001-a001-000000000008"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{passRatePercent} != null ? $F{passRatePercent} + "%" : "--"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="420" y="2" width="75" height="13" forecolor="#475569" uuid="c1d2e3f4-0009-6001-a001-000000000009"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{countGradeA} + "/" + $F{countGradeB} + "/" + $F{countGradeC} + "/" + $F{countGradeD} + "/" + $F{countGradeFail}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="495" y="2" width="60" height="13" uuid="c1d2e3f4-0010-6001-a001-000000000010"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="7" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{avgTotalScore} != null ? ($F{avgTotalScore}.doubleValue() >= 85.0 ? "EXEMPLARY" : ($F{avgTotalScore}.doubleValue() >= 70.0 ? "OPTIMAL" : ($F{avgTotalScore}.doubleValue() >= 60.0 ? "BORDERLINE" : "ACTION REQ"))) : "--"]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+
+	<!-- Page Footer: Must come BEFORE Summary in JasperReports schema! -->
+	<pageFooter>
+		<band height="18">
+			<line>
+				<reportElement x="0" y="2" width="555" height="1" forecolor="#E2E8F0" uuid="f1a2b3c4-0001-8001-c001-000000000001"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="5" width="260" height="12" forecolor="#94A3B8" uuid="f1a2b3c4-0002-8001-c001-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA["School Reporting Hub • Subject & Department Analytics • " + $P{P_SCHOOL_CODE}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="375" y="5" width="180" height="12" forecolor="#94A3B8" uuid="f1a2b3c4-0003-8001-c001-000000000003"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+
+	<!-- Summary Band: School Institutional Averages & Endorsements -->
+	<summary>
+		<band height="100">
+			<!-- Total Summary Box -->
+			<rectangle radius="4">
+				<reportElement x="0" y="8" width="555" height="24" forecolor="#CBD5E1" backcolor="#F1F5F9" uuid="e1f2a3b4-0001-7001-b001-000000000001"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="10" y="12" width="220" height="15" forecolor="#0F172A" uuid="e1f2a3b4-0002-7001-b001-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[INSTITUTIONAL OVERALL PERFORMANCE BENCHMARK:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="235" y="12" width="130" height="15" forecolor="#312E81" uuid="e1f2a3b4-0003-7001-b001-000000000003"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Total Student Records: " + ($V{V_TOTAL_ENROLLED_ALL} != null ? $V{V_TOTAL_ENROLLED_ALL} : 0)]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0">
+				<reportElement x="375" y="12" width="170" height="15" forecolor="#059669" uuid="e1f2a3b4-0004-7001-b001-000000000004"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Campus Overall Mean: " + ($V{V_OVERALL_AVG_SCORE} != null ? $V{V_OVERALL_AVG_SCORE} + "%" : "--")]]></textFieldExpression>
+			</textField>
+
+			<!-- Signatures & Accreditation Attestation -->
+			<staticText>
+				<reportElement x="0" y="40" width="250" height="20" forecolor="#64748B" uuid="e1f2a3b4-0005-7001-b001-000000000005"/>
+				<textElement>
+					<font fontName="SansSerif" size="7"/>
+				</textElement>
+				<text><![CDATA[Official academic audit compiled from live student gradebook records. Certified compliant with Cognia accreditation standards.]]></text>
+			</staticText>
+
+			<line>
+				<reportElement x="280" y="70" width="120" height="1" forecolor="#94A3B8" uuid="e1f2a3b4-0006-7001-b001-000000000006"/>
+			</line>
+			<textField>
+				<reportElement x="280" y="73" width="120" height="12" forecolor="#0F172A" uuid="e1f2a3b4-0007-7001-b001-000000000007"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{P_DIRECTOR_NAME}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="280" y="85" width="120" height="11" forecolor="#64748B" uuid="e1f2a3b4-0008-7001-b001-000000000008"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="7"/>
+				</textElement>
+				<text><![CDATA[School Principal / Director]]></text>
+			</staticText>
+
+			<line>
+				<reportElement x="425" y="70" width="120" height="1" forecolor="#94A3B8" uuid="e1f2a3b4-0009-7001-b001-000000000009"/>
+			</line>
+			<textField>
+				<reportElement x="425" y="73" width="120" height="12" forecolor="#0F172A" uuid="e1f2a3b4-0010-7001-b001-000000000010"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{P_LEGAL_REP_NAME}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="425" y="85" width="120" height="11" forecolor="#64748B" uuid="e1f2a3b4-0011-7001-b001-000000000011"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="7"/>
+				</textElement>
+				<text><![CDATA[Superintendent & Legal Rep]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

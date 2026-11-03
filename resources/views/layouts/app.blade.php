@@ -406,6 +406,10 @@
                     <span class="sidebar-icon">👥</span>
                     <span>Students Directory</span>
                 </a>
+                <a href="{{ route('attendance.index') }}" class="sidebar-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}">
+                    <span class="sidebar-icon">📅</span>
+                    <span>Attendance Register</span>
+                </a>
                 <a href="{{ route('ingestion.index') }}" class="sidebar-link {{ request()->routeIs('ingestion.*') ? 'active' : '' }}">
                     <span class="sidebar-icon">📥</span>
                     <span>Excel Marksheets</span>

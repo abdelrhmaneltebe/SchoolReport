@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\ReportStudioController;
 use App\Http\Controllers\ExcelIngestionController;
 use App\Http\Controllers\StudentEnrollmentController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Admin\SchoolManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 
@@ -120,6 +121,14 @@ Route::post('/configuration/students/{id}/update', [StudentEnrollmentController:
 Route::match(['get', 'post', 'delete'], '/configuration/students/{id}/delete', [StudentEnrollmentController::class, 'destroy'])->name('config.students.delete');
 Route::get('/configuration/students/template', [StudentEnrollmentController::class, 'downloadTemplate'])->name('config.students.template');
 Route::post('/configuration/students/upload', [StudentEnrollmentController::class, 'uploadSheet'])->name('config.students.upload');
+
+// Attendance Register, Daily Roll Call & Summaries
+Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+Route::post('/attendance/batch-save', [AttendanceController::class, 'saveBatch'])->name('attendance.batch_save');
+Route::post('/attendance/quick-update', [AttendanceController::class, 'quickUpdate'])->name('attendance.quick_update');
+Route::post('/attendance/mark-all', [AttendanceController::class, 'markAll'])->name('attendance.mark_all');
+Route::get('/attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
+Route::get('/attendance/export', [AttendanceController::class, 'exportCsv'])->name('attendance.export');
 
 // Universal Reports & Analytics Studio Hub
 Route::get('/reports', [ReportStudioController::class, 'index'])->name('reports.generator');

@@ -31,7 +31,8 @@ class ReportAnalyticsService
             'schoolClass.subjectAssignments.subject.gradingRule.periods.categories',
             'schoolClass.subjectAssignments.courseEnrollments',
             'gradeRecords.assignment.subject',
-            'subScores.category'
+            'subScores.category',
+            'attendanceRecords'
         ]);
 
         $schoolClass = $student->schoolClass;
@@ -92,7 +93,8 @@ class ReportAnalyticsService
         $students = $class->students()
             ->with([
                 'gradeRecords.assignment.subject',
-                'subScores.category'
+                'subScores.category',
+                'attendanceRecords'
             ])
             ->orderBy('full_name')
             ->get();
@@ -269,11 +271,37 @@ class ReportAnalyticsService
             $honorStatus = 'Academic Intervention / Remedial Required';
         }
 
-        // Attendance Profile
-        $attendanceDays = 90;
-        $presentDays = 87;
-        $absentDays = 3;
-        $attendanceRate = round(($presentDays / $attendanceDays) * 100.0, 1);
+        // Attendance Profile (Real dynamic data from attendance_records or baseline fallback)
+        $records = $student->attendanceRecords;
+        if ($records && $records->isNotEmpty()) {
+            $policy = $school ? $school->attendancePolicy : null;
+            $tardiesPerAbsence = max(1, $policy?->tardies_per_absence ?? 3);
+            $minAttendanceRate = (float)($policy?->min_attendance_rate ?? 85.0);
+            $chronicTruancyDays = (int)($policy?->chronic_truancy_days ?? 3);
+
+            $attendanceDays = $records->count();
+            $presentDays = $records->where('status', 'PRESENT')->count();
+            $tardyDays = $records->where('status', 'TARDY')->count();
+            $unexcusedDays = $records->where('status', 'UNEXCUSED')->count();
+            $excusedDays = $records->where('status', 'EXCUSED')->count();
+            $absentDays = $unexcusedDays + $excusedDays;
+
+            $equivalentFromTardies = (int)floor($tardyDays / $tardiesPerAbsence);
+            $effectiveAbsences = $unexcusedDays + $equivalentFromTardies;
+
+            $attendanceRate = $attendanceDays > 0
+                ? round((($presentDays + $tardyDays) / $attendanceDays) * 100.0, 1)
+                : 100.0;
+
+            $isWarning = $attendanceRate < $minAttendanceRate || $effectiveAbsences >= $chronicTruancyDays;
+            $attendanceStatus = $isWarning ? 'Attendance Warning' : 'Regular';
+        } else {
+            $attendanceDays = 90;
+            $presentDays = 87;
+            $absentDays = 3;
+            $attendanceRate = round(($presentDays / $attendanceDays) * 100.0, 1);
+            $attendanceStatus = 'Regular';
+        }
 
         return [
             'student' => [
@@ -316,7 +344,7 @@ class ReportAnalyticsService
                 'presentDays' => $presentDays,
                 'absentDays' => $absentDays,
                 'attendanceRate' => $attendanceRate,
-                'status' => $attendanceRate >= 85.0 ? 'Regular' : 'Attendance Warning',
+                'status' => $attendanceStatus,
             ],
             'subjectRows' => $subjectRows,
         ];
@@ -502,6 +530,42 @@ class ReportAnalyticsService
         $legalRep = $jrxmlDefaults['P_LEGAL_REP_NAME'] ?? 'Mohamed Tayseer Mattar';
         $director = $jrxmlDefaults['P_DIRECTOR_NAME'] ?? 'Ragia Al Akhal';
 
+        // SGIS Attendance Calculations (T1, T2, T3)
+        $attendanceRecords = $student->attendanceRecords ?? collect();
+        $t1Absences = 0;
+        $t2Absences = 0;
+        $t3Absences = 0;
+
+        $policy = $school ? $school->attendancePolicy : null;
+        $tardiesPerAbsence = max(1, $policy?->tardies_per_absence ?? 3);
+
+        if ($attendanceRecords->isNotEmpty()) {
+            foreach (['t1' => $t1Period, 't2' => $t2Period, 't3' => $t3Period] as $key => $periodObj) {
+                if ($periodObj && $periodObj->start_date && $periodObj->end_date && $periodObj->start_date != $periodObj->end_date) {
+                    $periodRecs = $attendanceRecords->filter(function($r) use ($periodObj) {
+                        return $r->attendance_date >= $periodObj->start_date && $r->attendance_date <= $periodObj->end_date;
+                    });
+                } else {
+                    $periodRecs = collect();
+                }
+
+                $unexcused = $periodRecs->where('status', 'UNEXCUSED')->count();
+                $tardy = $periodRecs->where('status', 'TARDY')->count();
+                $totalAbs = $unexcused + (int)floor($tardy / $tardiesPerAbsence);
+
+                if ($key === 't1') $t1Absences = $totalAbs;
+                if ($key === 't2') $t2Absences = $totalAbs;
+                if ($key === 't3') $t3Absences = $totalAbs;
+            }
+
+            // If periods have overlapping/null dates or yielded 0, but attendance records exist, assign total to t1
+            if ($t1Absences === 0 && $t2Absences === 0 && $t3Absences === 0) {
+                $unexcusedTotal = $attendanceRecords->where('status', 'UNEXCUSED')->count();
+                $tardyTotal = $attendanceRecords->where('status', 'TARDY')->count();
+                $t1Absences = $unexcusedTotal + (int)floor($tardyTotal / $tardiesPerAbsence);
+            }
+        }
+
         return [
             'school' => [
                 'name' => $schoolName,
@@ -534,9 +598,9 @@ class ReportAnalyticsService
                 'summerCourses' => $summerCoursesString,
             ],
             'attendance' => [
-                't1' => 0,
-                't2' => 0,
-                't3' => 0,
+                't1' => $t1Absences,
+                't2' => $t2Absences,
+                't3' => $t3Absences,
             ],
         ];
     }
