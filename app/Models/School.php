@@ -248,6 +248,18 @@ class School extends Model
         return $this->hasMany(User::class, 'school_id', 'school_id');
     }
 
+    public function assignedUsers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'school_user',
+            'school_id',
+            'user_id',
+            'school_id',
+            'id'
+        )->withTimestamps();
+    }
+
     public function adminUser()
     {
         return $this->hasOne(User::class, 'school_id', 'school_id')->where('role', 'SCHOOL_ADMIN');

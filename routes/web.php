@@ -31,6 +31,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // User System Management
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::post('/users/{id}/update', [UserManagementController::class, 'update'])->name('users.update_post');
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 });
 

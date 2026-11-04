@@ -37,12 +37,12 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // Set default tenant context
-            if ($user->school_id) {
-                session(['active_school_id' => $user->school_id]);
+            // Set default tenant context based on accessible schools
+            $accessibleSchools = $user->accessibleSchools();
+            if ($accessibleSchools->isNotEmpty()) {
+                session(['active_school_id' => $accessibleSchools->first()->school_id]);
             } else {
-                $firstSchool = \App\Models\School::first();
-                session(['active_school_id' => $firstSchool->school_id ?? null]);
+                session(['active_school_id' => null]);
             }
 
             return redirect()->intended(route('dashboard'))
@@ -63,8 +63,9 @@ class AuthController extends Controller
         if ($user) {
             Auth::login($user);
             request()->session()->regenerate();
-            if ($user->school_id) {
-                session(['active_school_id' => $user->school_id]);
+            $accessibleSchools = $user->accessibleSchools();
+            if ($accessibleSchools->isNotEmpty()) {
+                session(['active_school_id' => $accessibleSchools->first()->school_id]);
             }
             return redirect()->route('dashboard')
                 ->with('success', "Signed in as {$user->name} ({$user->role})");

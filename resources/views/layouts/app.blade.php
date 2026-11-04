@@ -7,8 +7,12 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Flatpickr CSS & Custom Sleek Theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/flatpickr/custom-theme.css') }}">
+    <!-- Flatpickr JS (Preloaded for datepickers across all views) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}"></script>
     <style>
         :root {
             --bs-primary: #4f46e5;
@@ -501,16 +505,28 @@
                 <!-- Topbar Right Controls -->
                 <div class="d-flex align-items-center" style="gap: 16px;">
                     @auth
-                        @if(auth()->user()->isSuperAdmin())
+                        @php
+                            $userAccessibleSchools = auth()->user()->accessibleSchools();
+                            $activeSchoolId = session('active_school_id') ?? $currentSchool->school_id ?? '';
+                        @endphp
+                        @if(auth()->user()->isSuperAdmin() || $userAccessibleSchools->count() > 1)
                             <div class="d-none d-md-flex align-items-center gap-2">
-                                <label class="form-label mb-0 text-muted small fw-semibold text-nowrap">🌍 Active School:</label>
-                                <select class="form-select form-select-sm fw-bold border-primary" style="max-width: 240px;" onchange="window.location.href='{{ url('/admin/schools/switch') }}/' + this.value">
-                                    @foreach($allSchools ?? [\App\Models\School::first()] as $sch)
-                                        <option value="{{ $sch->school_id }}" {{ (session('active_school_id') ?? $currentSchool->school_id ?? '') === $sch->school_id ? 'selected' : '' }}>
+                                <label class="form-label mb-0 text-muted small fw-semibold text-nowrap">
+                                    {{ auth()->user()->isSuperAdmin() ? '🌍 All Schools:' : '🏫 My Schools:' }}
+                                </label>
+                                <select class="form-select form-select-sm fw-bold border-primary shadow-2xs" style="max-width: 260px;" onchange="window.location.href='{{ url('/admin/schools/switch') }}/' + this.value">
+                                    @foreach($userAccessibleSchools as $sch)
+                                        <option value="{{ $sch->school_id }}" {{ $activeSchoolId === $sch->school_id ? 'selected' : '' }}>
                                             🏫 {{ $sch->school_name }} ({{ $sch->school_code }})
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+                        @elseif($userAccessibleSchools->isNotEmpty())
+                            <div class="d-none d-md-flex align-items-center gap-2">
+                                <span class="badge bg-light text-dark border px-2.5 py-1.5 small fw-semibold shadow-2xs">
+                                    🏫 {{ $userAccessibleSchools->first()->school_name }}
+                                </span>
                             </div>
                         @endif
 

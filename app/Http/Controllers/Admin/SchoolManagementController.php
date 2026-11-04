@@ -133,11 +133,17 @@ class SchoolManagementController extends Controller
     }
 
     /**
-     * Switch active school context for Super Admin.
+     * Switch active school context (Super Admin across all schools, School Admin across assigned schools).
      */
     public function switchSchool(Request $request, $schoolId)
     {
         $school = School::where('school_id', $schoolId)->firstOrFail();
+
+        // Enforce Multi-School Access Control
+        if (!auth()->user()->hasAccessToSchool($school->school_id)) {
+            abort(403, "Access Denied: You do not have administrative access to {$school->school_name}.");
+        }
+
         session(['active_school_id' => $school->school_id]);
 
         return redirect()->back()->with('success', "Switched workspace to {$school->school_name} ({$school->school_code})");
