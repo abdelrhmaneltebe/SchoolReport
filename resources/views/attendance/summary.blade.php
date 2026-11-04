@@ -108,9 +108,9 @@
                     </label>
                     <div class="input-group input-group-sm shadow-2xs">
                         <span class="input-group-text bg-light text-muted small">From</span>
-                        <input type="date" name="start_date" class="form-control text-center fw-semibold" value="{{ $startDate }}" onchange="document.getElementById('summaryFilterForm').submit()">
+                        <input type="date" name="start_date" class="form-control text-center fw-semibold" value="{{ $startDate }}" onclick="try{this.showPicker()}catch(e){}" onchange="document.getElementById('summaryFilterForm').submit()" style="cursor: pointer;" title="Click to open calendar">
                         <span class="input-group-text bg-light text-muted small">To</span>
-                        <input type="date" name="end_date" class="form-control text-center fw-semibold" value="{{ $endDate }}" onchange="document.getElementById('summaryFilterForm').submit()">
+                        <input type="date" name="end_date" class="form-control text-center fw-semibold" value="{{ $endDate }}" onclick="try{this.showPicker()}catch(e){}" onchange="document.getElementById('summaryFilterForm').submit()" style="cursor: pointer;" title="Click to open calendar">
                     </div>
                 </div>
 

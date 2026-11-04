@@ -140,7 +140,15 @@
                         <button type="button" class="btn btn-outline-secondary fw-bold" onclick="jumpDate(-1)" title="Previous Day">
                             ◀ Prev
                         </button>
-                        <input type="date" name="date" id="dateInput" class="form-control text-center fw-bold" value="{{ $date }}" onchange="document.getElementById('filterForm').submit()">
+                        <input type="date" 
+                               name="date" 
+                               id="dateInput" 
+                               class="form-control text-center fw-bold" 
+                               value="{{ $date }}" 
+                               onclick="try{this.showPicker()}catch(e){}" 
+                               onchange="document.getElementById('filterForm').submit()"
+                               style="cursor: pointer;"
+                               title="Click to open calendar">
                         <button type="button" class="btn btn-outline-secondary fw-bold" onclick="jumpDate(1)" title="Next Day">
                             Next ▶
                         </button>
@@ -414,6 +422,19 @@
     const currentMode = "{{ $mode }}";
     const currentAssignmentId = "{{ $selectedAssignment?->id ?? '' }}";
     const currentSlotName = "{{ $slotName ?? '' }}";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('dateInput');
+        if (dateInput) {
+            dateInput.addEventListener('click', function() {
+                try {
+                    if (typeof this.showPicker === 'function') {
+                        this.showPicker();
+                    }
+                } catch (e) {}
+            });
+        }
+    });
 
     function jumpDate(days) {
         const dateInput = document.getElementById('dateInput');
