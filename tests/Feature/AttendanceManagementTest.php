@@ -134,8 +134,11 @@ class AttendanceManagementTest extends TestCase
         $response->assertSee('filterBtnAll');
         $response->assertSee('filterBtnPresent');
         $response->assertSee('filterBtnUnexcused');
+        $response->assertSee('filterBtnUnmarked');
         $response->assertSee('visibleStudentCount');
         $response->assertSee('noResultsRow');
+        // Verify default state is unselected (neither Present nor any other radio is checked by default)
+        $response->assertDontSee('id="status-present-' . $this->student1->id . '" value="PRESENT" checked', false);
     }
 
     /**

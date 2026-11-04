@@ -347,6 +347,9 @@
                                     <button type="button" class="btn btn-sm btn-outline-info text-dark fw-bold px-2 py-1 att-filter-btn" id="filterBtnTardy" onclick="setStatusFilter('TARDY')">
                                         🔵 Tardy <span class="badge bg-info-subtle text-dark ms-1" id="filterCountTardy">{{ $stats['tardy'] }}</span>
                                     </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-bold px-2 py-1 att-filter-btn" id="filterBtnUnmarked" onclick="setStatusFilter('UNMARKED')">
+                                        ⚪ Unmarked <span class="badge bg-secondary-subtle text-secondary ms-1" id="filterCountUnmarked">{{ $stats['pending'] ?? 0 }}</span>
+                                    </button>
                                 </div>
 
                                 <div class="badge bg-light text-secondary border px-2 py-1 small fw-normal ms-1">
@@ -380,7 +383,7 @@
                                 @foreach($students as $index => $student)
                                     @php
                                         $rec = $existingRecords->get($student->id);
-                                        $currentStatus = $rec ? $rec->status : 'PRESENT';
+                                        $currentStatus = $rec ? $rec->status : null;
                                         $currentRemarks = $rec ? $rec->remarks : '';
                                     @endphp
                                     <tr id="row-{{ $student->id }}" 
@@ -565,6 +568,7 @@
         const btnUnexcused = document.getElementById('filterBtnUnexcused');
         const btnExcused = document.getElementById('filterBtnExcused');
         const btnTardy = document.getElementById('filterBtnTardy');
+        const btnUnmarked = document.getElementById('filterBtnUnmarked');
 
         // Reset all buttons to outline style
         if (btnAll) btnAll.className = 'btn btn-sm btn-outline-secondary fw-bold px-2 py-1 att-filter-btn';
@@ -572,6 +576,7 @@
         if (btnUnexcused) btnUnexcused.className = 'btn btn-sm btn-outline-danger fw-bold px-2 py-1 att-filter-btn';
         if (btnExcused) btnExcused.className = 'btn btn-sm btn-outline-warning text-dark fw-bold px-2 py-1 att-filter-btn';
         if (btnTardy) btnTardy.className = 'btn btn-sm btn-outline-info text-dark fw-bold px-2 py-1 att-filter-btn';
+        if (btnUnmarked) btnUnmarked.className = 'btn btn-sm btn-outline-secondary fw-bold px-2 py-1 att-filter-btn';
 
         // Apply active solid styling
         if (status === 'ALL' && btnAll) {
@@ -584,6 +589,8 @@
             btnExcused.className = 'btn btn-sm btn-warning text-dark fw-bold px-2 py-1 att-filter-btn shadow-xs active';
         } else if (status === 'TARDY' && btnTardy) {
             btnTardy.className = 'btn btn-sm btn-info text-dark fw-bold px-2 py-1 att-filter-btn shadow-xs active';
+        } else if (status === 'UNMARKED' && btnUnmarked) {
+            btnUnmarked.className = 'btn btn-sm btn-secondary text-white fw-bold px-2 py-1 att-filter-btn shadow-xs active';
         }
 
         applyAttendanceFilters();
@@ -606,7 +613,7 @@
             const adm = (row.getAttribute('data-admission-number') || '').toLowerCase();
 
             const checkedRadio = row.querySelector('input.att-radio:checked');
-            const status = checkedRadio ? checkedRadio.value : 'PRESENT';
+            const status = checkedRadio ? checkedRadio.value : 'UNMARKED';
 
             const matchesQuery = !query || name.includes(query) || adm.includes(query);
             const matchesStatus = (currentFilterStatus === 'ALL') || (status === currentFilterStatus);
@@ -651,18 +658,21 @@
         const excused = document.querySelectorAll('input.att-radio[value="EXCUSED"]:checked').length;
         const tardy = document.querySelectorAll('input.att-radio[value="TARDY"]:checked').length;
         const total = document.querySelectorAll('.att-student-row').length;
+        const unmarked = Math.max(0, total - (present + unexcused + excused + tardy));
 
         const elAll = document.getElementById('filterCountAll');
         const elPres = document.getElementById('filterCountPresent');
         const elUnex = document.getElementById('filterCountUnexcused');
         const elExc = document.getElementById('filterCountExcused');
         const elTar = document.getElementById('filterCountTardy');
+        const elUnmarked = document.getElementById('filterCountUnmarked');
 
         if (elAll) elAll.textContent = total;
         if (elPres) elPres.textContent = present;
         if (elUnex) elUnex.textContent = unexcused;
         if (elExc) elExc.textContent = excused;
         if (elTar) elTar.textContent = tardy;
+        if (elUnmarked) elUnmarked.textContent = unmarked;
     }
 
     /* ==========================================================================
@@ -757,7 +767,7 @@
         if (elUnexcused) elUnexcused.textContent = stats.unexcused;
         if (elExcused) elExcused.textContent = stats.excused;
         if (elTardy) elTardy.textContent = stats.tardy;
-        if (elRate) elRate.textContent = stats.rate + '%';
+        if (elRate) elRate.textContent = stats.rate !== null && stats.rate !== undefined ? (stats.rate + '%') : '--';
     }
 
     function recalcStatsLocally() {
@@ -765,14 +775,16 @@
         const unexcused = document.querySelectorAll('input.att-radio[value="UNEXCUSED"]:checked').length;
         const excused = document.querySelectorAll('input.att-radio[value="EXCUSED"]:checked').length;
         const tardy = document.querySelectorAll('input.att-radio[value="TARDY"]:checked').length;
-        const total = present + unexcused + excused + tardy;
+        const totalMarked = present + unexcused + excused + tardy;
+        const totalStudents = document.querySelectorAll('.att-student-row').length;
+        const rateBase = Math.max(1, totalStudents);
 
         const stats = {
             present: present,
             unexcused: unexcused,
             excused: excused,
             tardy: tardy,
-            rate: total > 0 ? Math.round(((present + tardy) / total) * 1000) / 10 : 0
+            rate: totalMarked > 0 ? Math.round(((present + tardy) / rateBase) * 1000) / 10 : null
         };
         updateStatsUI(stats);
     }

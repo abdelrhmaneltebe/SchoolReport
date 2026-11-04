@@ -203,7 +203,7 @@ class AttendanceController extends Controller
             'slot_name' => 'nullable|string|max:50',
             'attendance_date' => 'required|date',
             'attendance' => 'nullable|array',
-            'attendance.*.status' => 'required|in:PRESENT,UNEXCUSED,EXCUSED,TARDY',
+            'attendance.*.status' => 'nullable|in:PRESENT,UNEXCUSED,EXCUSED,TARDY',
             'attendance.*.remarks' => 'nullable|string|max:255',
         ]);
 
@@ -235,6 +235,10 @@ class AttendanceController extends Controller
 
         foreach ($attendanceData as $studentId => $data) {
             if (!in_array($studentId, $allowedStudentIds)) {
+                continue;
+            }
+
+            if (empty($data['status'])) {
                 continue;
             }
 
