@@ -59,6 +59,9 @@
             <a href="{{ route('config.classes.gradebook', ['id' => $assignment->class_id, 'assignment_id' => $assignment->id]) }}" class="btn btn-success fw-bold btn-sm shadow-xs">
                 📖 Open Gradebook
             </a>
+            <a href="{{ route('attendance.index', ['mode' => 'slot', 'class_id' => $assignment->class_id, 'assignment_id' => $assignment->id]) }}" class="btn btn-primary fw-bold btn-sm shadow-xs">
+                ⏱️ Lesson Attendance
+            </a>
             <button type="button" class="btn btn-primary fw-bold btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#modalUploadGradebookSheet">
                 📤 Upload Grades Sheet
             </button>

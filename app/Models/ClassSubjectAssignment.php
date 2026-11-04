@@ -21,6 +21,11 @@ class ClassSubjectAssignment extends Model
         return $this->belongsTo(MasterSubject::class, 'subject_id');
     }
 
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class, 'class_subject_assignment_id');
+    }
+
     public function gradeRecords()
     {
         return $this->hasMany(GradeRecord::class, 'class_subject_assignment_id');

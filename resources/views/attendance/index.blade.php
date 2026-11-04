@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Attendance Register & Daily Roll Call')
+@section('title', $mode === 'slot' ? 'Subject & Slot Attendance Register' : 'Attendance Register & Daily Roll Call')
 
 @section('content')
 <div class="container-fluid px-0">
@@ -9,27 +9,35 @@
     <div class="card border rounded-3 p-3 mb-4 bg-white shadow-xs">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="p-2 bg-primary-subtle text-primary rounded-3 fs-3">
-                    📅
+                <div class="p-2 {{ $mode === 'slot' ? 'bg-info-subtle text-info' : 'bg-primary-subtle text-primary' }} rounded-3 fs-3">
+                    {{ $mode === 'slot' ? '📚' : '📅' }}
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-primary text-white px-2 py-1 small">Pillar 1 Operational</span>
+                        <span class="badge {{ $mode === 'slot' ? 'bg-info text-dark' : 'bg-primary text-white' }} px-2 py-1 small">
+                            {{ $mode === 'slot' ? 'Pillar 1 • Subject & Slot Mode' : 'Pillar 1 • Full Day Homeroom' }}
+                        </span>
                         <span class="badge bg-light text-secondary border font-monospace">{{ $activeSchool->school_code }}</span>
                     </div>
-                    <h4 class="fw-bold mb-1 text-dark">Class Attendance Register &amp; Daily Roll Call</h4>
+                    <h4 class="fw-bold mb-1 text-dark">
+                        {{ $mode === 'slot' ? 'Subject Period & Timetable Slot Attendance' : 'Class Attendance Register & Daily Roll Call' }}
+                    </h4>
                     <p class="text-muted small mb-0">
-                        Record daily homeroom presence, unexcused absences, excused sick leaves, and tardies for <strong>{{ $activeSchool->school_name }}</strong>.
+                        @if($mode === 'slot')
+                            Record attendance for specific subject lessons and timetable periods in <strong>{{ $activeSchool->school_name }}</strong>.
+                        @else
+                            Record daily homeroom presence, unexcused absences, excused sick leaves, and tardies for <strong>{{ $activeSchool->school_name }}</strong>.
+                        @endif
                     </p>
                 </div>
             </div>
 
             <!-- Top Mode Tabs -->
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('attendance.index') }}" class="btn btn-sm btn-primary fw-bold shadow-2xs">
-                    📋 Daily Roll Call
+                <a href="{{ route('attendance.index', ['mode' => $mode]) }}" class="btn btn-sm btn-primary fw-bold shadow-2xs">
+                    📋 Roll Call Register
                 </a>
-                <a href="{{ route('attendance.summary') }}" class="btn btn-sm btn-outline-secondary fw-semibold">
+                <a href="{{ route('attendance.summary', ['mode' => $mode]) }}" class="btn btn-sm btn-outline-secondary fw-semibold">
                     📊 Sheet &amp; Summaries
                 </a>
                 <a href="{{ route('config.attendance') }}" class="btn btn-sm btn-outline-secondary fw-semibold">
@@ -39,12 +47,44 @@
         </div>
     </div>
 
-    <!-- Filter & Date Controls Card -->
+    <!-- Mode Selector & Filter Controls Card -->
     <div class="card border rounded-3 p-3 mb-4 bg-white shadow-xs">
+        <!-- Segmented Mode Switcher -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-3 border-bottom">
+            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border shadow-2xs" role="group">
+                <a href="{{ route('attendance.index', ['mode' => 'full_day', 'class_id' => $selectedClass?->id, 'date' => $date]) }}" 
+                   class="btn rounded-pill px-3 fw-bold {{ $mode === 'full_day' ? 'btn-primary shadow-xs' : 'btn-light text-secondary' }}">
+                    ☀️ Full Day (Homeroom Roll Call)
+                </a>
+                <a href="{{ route('attendance.index', ['mode' => 'slot', 'class_id' => $selectedClass?->id, 'date' => $date]) }}" 
+                   class="btn rounded-pill px-3 fw-bold {{ $mode === 'slot' ? 'btn-primary shadow-xs' : 'btn-light text-secondary' }}">
+                    📚 Subject &amp; Slot Attendance
+                </a>
+            </div>
+
+            @if($mode === 'slot' && $selectedAssignment)
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small">
+                        📖 {{ $selectedAssignment->subject->subject_name }}
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small">
+                        ⏱️ {{ $slotName }}
+                    </span>
+                    @if($selectedAssignment->assigned_teacher)
+                        <span class="badge bg-light text-dark border px-2 py-1 small">
+                            👤 Teacher: {{ $selectedAssignment->assigned_teacher }}
+                        </span>
+                    @endif
+                </div>
+            @endif
+        </div>
+
         <form method="GET" action="{{ route('attendance.index') }}" id="filterForm">
+            <input type="hidden" name="mode" value="{{ $mode }}">
+
             <div class="row g-3 align-items-end">
                 <!-- Class Selection -->
-                <div class="col-md-4 col-sm-6">
+                <div class="{{ $mode === 'slot' ? 'col-md-3 col-sm-6' : 'col-md-4 col-sm-6' }}">
                     <label class="form-label fw-bold small text-muted text-uppercase mb-1">
                         🏫 Select Class / Section:
                     </label>
@@ -59,8 +99,40 @@
                     </select>
                 </div>
 
+                @if($mode === 'slot')
+                    <!-- Subject / Course Selection -->
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label fw-bold small text-muted text-uppercase mb-1">
+                            📖 Select Subject:
+                        </label>
+                        <select name="assignment_id" class="form-select form-select-sm fw-bold border-info shadow-2xs" onchange="document.getElementById('filterForm').submit()">
+                            @forelse($assignments as $assign)
+                                <option value="{{ $assign->id }}" {{ ($selectedAssignment && $selectedAssignment->id == $assign->id) ? 'selected' : '' }}>
+                                    {{ $assign->subject->subject_name }} {{ $assign->assigned_teacher ? "({$assign->assigned_teacher})" : '' }}
+                                </option>
+                            @empty
+                                <option value="">-- No subjects assigned --</option>
+                            @endforelse
+                        </select>
+                    </div>
+
+                    <!-- Timetable Slot / Period Selection -->
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label fw-bold small text-muted text-uppercase mb-1">
+                            ⏱️ Timetable Period / Slot:
+                        </label>
+                        <select name="slot_name" class="form-select form-select-sm fw-bold border-secondary shadow-2xs" onchange="document.getElementById('filterForm').submit()">
+                            @foreach($slots as $slotKey => $slotLabel)
+                                <option value="{{ $slotKey }}" {{ $slotName === $slotKey ? 'selected' : '' }}>
+                                    {{ $slotLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
                 <!-- Date Picker & Quick Day Jumper -->
-                <div class="col-md-5 col-sm-6">
+                <div class="{{ $mode === 'slot' ? 'col-md-3 col-sm-6' : 'col-md-5 col-sm-6' }}">
                     <label class="form-label fw-bold small text-muted text-uppercase mb-1">
                         🗓️ Attendance Date:
                     </label>
@@ -78,43 +150,68 @@
                     </div>
                 </div>
 
-                <!-- Quick Action Buttons -->
-                <div class="col-md-3 col-sm-12 text-md-end text-start d-flex gap-2 justify-content-md-end">
+                @if($mode === 'full_day')
+                    <!-- Quick Action Buttons for Full Day -->
+                    <div class="col-md-3 col-sm-12 text-md-end text-start d-flex gap-2 justify-content-md-end">
+                        @if($selectedClass && $students->isNotEmpty())
+                            <button type="button" class="btn btn-sm btn-outline-success fw-bold flex-grow-1 flex-md-grow-0 shadow-2xs" onclick="markAllPresent()">
+                                ✓ All Present
+                            </button>
+                            <button type="submit" form="attendanceBatchForm" class="btn btn-sm btn-primary fw-bold flex-grow-1 flex-md-grow-0 shadow-2xs">
+                                💾 Save All
+                            </button>
+                        @endif
+                    </div>
+                @endif
+            </div>
+
+            @if($mode === 'slot')
+                <!-- Quick Action Buttons for Slot Mode -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
+                    <div class="text-muted small">
+                        Showing students enrolled in <strong>{{ $selectedAssignment ? $selectedAssignment->subject->subject_name : 'Subject' }}</strong> for <strong>{{ $slotName }}</strong>.
+                    </div>
                     @if($selectedClass && $students->isNotEmpty())
-                        <button type="button" class="btn btn-sm btn-outline-success fw-bold flex-grow-1 flex-md-grow-0 shadow-2xs" onclick="markAllPresent()">
-                            ✓ All Present
-                        </button>
-                        <button type="submit" form="attendanceBatchForm" class="btn btn-sm btn-primary fw-bold flex-grow-1 flex-md-grow-0 shadow-2xs">
-                            💾 Save All
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-success fw-bold shadow-2xs" onclick="markAllPresent()">
+                                ✓ Mark All Present in this Slot
+                            </button>
+                            <button type="submit" form="attendanceBatchForm" class="btn btn-sm btn-primary fw-bold shadow-2xs">
+                                💾 Save Slot Attendance
+                            </button>
+                        </div>
                     @endif
                 </div>
-            </div>
+            @endif
         </form>
     </div>
 
     @if($selectedClass)
-        <!-- Daily Statistics Banner -->
+        <!-- Daily / Slot Statistics Banner -->
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-2">
                 <div class="p-3 bg-white border rounded-3 shadow-2xs text-center">
-                    <div class="text-muted small fw-semibold">Total Students</div>
+                    <div class="text-muted small fw-semibold">
+                        {{ $mode === 'slot' ? 'Enrolled in Subject' : 'Total Students' }}
+                    </div>
                     <div class="h4 fw-bold text-dark my-1">{{ $stats['total'] }}</div>
-                    <small class="text-muted">{{ $selectedClass->class_name }}</small>
+                    <small class="text-muted">
+                        {{ $mode === 'slot' && $selectedAssignment ? $selectedAssignment->subject->subject_name : $selectedClass->class_name }}
+                    </small>
                 </div>
             </div>
             <div class="col-6 col-md-2">
                 <div class="p-3 bg-white border border-success-subtle rounded-3 shadow-2xs text-center bg-success-subtle bg-opacity-25">
                     <div class="text-success small fw-bold">🟢 Present</div>
                     <div class="h4 fw-bold text-success my-1" id="statPresentCount">{{ $stats['present'] }}</div>
-                    <small class="text-muted">In Attendance</small>
+                    <small class="text-muted">{{ $mode === 'slot' ? 'In Lesson' : 'In Attendance' }}</small>
                 </div>
             </div>
             <div class="col-6 col-md-2">
                 <div class="p-3 bg-white border border-danger-subtle rounded-3 shadow-2xs text-center bg-danger-subtle bg-opacity-25">
                     <div class="text-danger small fw-bold">🔴 Unexcused</div>
                     <div class="h4 fw-bold text-danger my-1" id="statUnexcusedCount">{{ $stats['unexcused'] }}</div>
-                    <small class="text-muted">Absences</small>
+                    <small class="text-muted">{{ $mode === 'slot' ? 'Skipped / Cut' : 'Absences' }}</small>
                 </div>
             </div>
             <div class="col-6 col-md-2">
@@ -128,16 +225,18 @@
                 <div class="p-3 bg-white border border-info-subtle rounded-3 shadow-2xs text-center bg-info-subtle bg-opacity-25">
                     <div class="text-info small fw-bold">🔵 Tardy</div>
                     <div class="h4 fw-bold text-info my-1" id="statTardyCount">{{ $stats['tardy'] }}</div>
-                    <small class="text-muted">Late Arrivals</small>
+                    <small class="text-muted">Late to Class</small>
                 </div>
             </div>
             <div class="col-6 col-md-2">
                 <div class="p-3 bg-white border rounded-3 shadow-2xs text-center">
-                    <div class="text-muted small fw-semibold">Attendance Rate</div>
+                    <div class="text-muted small fw-semibold">
+                        {{ $mode === 'slot' ? 'Lesson Rate' : 'Attendance Rate' }}
+                    </div>
                     <div class="h4 fw-bold my-1 {{ ($stats['rate'] !== null && $stats['rate'] < $stats['minRate']) ? 'text-danger' : 'text-primary' }}" id="statRatePercent">
                         {{ $stats['rate'] !== null ? $stats['rate'] . '%' : '--' }}
                     </div>
-                    <small class="text-muted">Cutoff: <strong>{{ $stats['minRate'] }}%</strong></small>
+                    <small class="text-muted">Policy: <strong>{{ $stats['minRate'] }}%</strong></small>
                 </div>
             </div>
         </div>
@@ -146,13 +245,24 @@
         <form method="POST" action="{{ route('attendance.batch_save') }}" id="attendanceBatchForm">
             @csrf
             <input type="hidden" name="class_id" value="{{ $selectedClass->id }}">
+            <input type="hidden" name="mode" value="{{ $mode }}">
             <input type="hidden" name="attendance_date" value="{{ $date }}">
             <input type="hidden" name="session_type" value="{{ $sessionType }}">
+            @if($mode === 'slot' && $selectedAssignment)
+                <input type="hidden" name="assignment_id" value="{{ $selectedAssignment->id }}">
+                <input type="hidden" name="slot_name" value="{{ $slotName }}">
+            @endif
 
             <div class="card border rounded-3 bg-white shadow-xs overflow-hidden">
                 <div class="card-header bg-light border-bottom p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="fw-bold text-dark">📋 Roll Call Register: {{ $selectedClass->class_name }}</span>
+                        @if($mode === 'slot' && $selectedAssignment)
+                            <span class="fw-bold text-dark">
+                                📚 Lesson Roster: <strong>{{ $selectedAssignment->subject->subject_name }}</strong> • {{ $slotName }}
+                            </span>
+                        @else
+                            <span class="fw-bold text-dark">📋 Roll Call Register: {{ $selectedClass->class_name }}</span>
+                        @endif
                         <span class="badge bg-secondary-subtle text-secondary small">{{ \Carbon\Carbon::parse($date)->format('l, F j, Y') }}</span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -168,8 +278,14 @@
                 @if($students->isEmpty())
                     <div class="p-5 text-center text-muted">
                         <div class="fs-1 mb-2">👥</div>
-                        <h6 class="fw-bold">No Students Enrolled in this Class</h6>
-                        <p class="small mb-3">Add or import students into {{ $selectedClass->class_name }} to record attendance.</p>
+                        <h6 class="fw-bold">No Students Enrolled</h6>
+                        <p class="small mb-3">
+                            @if($mode === 'slot')
+                                No students found for {{ $selectedAssignment ? $selectedAssignment->subject->subject_name : 'this subject' }} in {{ $selectedClass->class_name }}.
+                            @else
+                                Add or import students into {{ $selectedClass->class_name }} to record attendance.
+                            @endif
+                        </p>
                         <a href="{{ route('config.students.index') }}" class="btn btn-sm btn-primary fw-bold">
                             Go to Students Directory →
                         </a>
@@ -295,6 +411,10 @@
 
 <!-- JavaScript for Dynamic Interactions & Live Auto-Save -->
 <script>
+    const currentMode = "{{ $mode }}";
+    const currentAssignmentId = "{{ $selectedAssignment?->id ?? '' }}";
+    const currentSlotName = "{{ $slotName ?? '' }}";
+
     function jumpDate(days) {
         const dateInput = document.getElementById('dateInput');
         if (!dateInput.value) return;
@@ -323,6 +443,16 @@
         const remarks = document.getElementById('remarks-' + studentId)?.value || '';
         const date = document.getElementById('dateInput').value;
 
+        const payload = {
+            student_id: studentId,
+            attendance_date: date,
+            status: status,
+            remarks: remarks,
+            mode: currentMode,
+            assignment_id: currentAssignmentId,
+            slot_name: currentSlotName
+        };
+
         fetch("{{ route('attendance.quick_update') }}", {
             method: 'POST',
             headers: {
@@ -330,12 +460,7 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                student_id: studentId,
-                attendance_date: date,
-                status: status,
-                remarks: remarks
-            })
+            body: JSON.stringify(payload)
         })
         .then(res => res.json())
         .then(data => {

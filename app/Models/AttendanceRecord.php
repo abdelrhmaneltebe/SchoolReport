@@ -15,4 +15,9 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
+
+    public function classSubjectAssignment()
+    {
+        return $this->belongsTo(ClassSubjectAssignment::class, 'class_subject_assignment_id');
+    }
 }
