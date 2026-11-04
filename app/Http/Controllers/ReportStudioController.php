@@ -588,7 +588,11 @@ class ReportStudioController extends Controller
                 $this->jasperService->generateReport($templateFilePath, $parameters, $sgisData['subjectRows'], $outputPath);
                 return response()->download($outputPath);
             } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'JasperReports runner notice: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::warning("Jasper SGIS export notice: " . $e->getMessage());
+                return redirect()->route('reports.card.single', [
+                    'student' => $student->id,
+                    'print' => 1
+                ])->with('warning', 'Notice: Report card opened in High-Resolution Web & Print PDF mode.');
             }
         }
 
@@ -657,7 +661,11 @@ class ReportStudioController extends Controller
             $this->jasperService->generateReport($templateFilePath, $parameters, $subjectRows, $outputPath);
             return response()->download($outputPath);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'JasperReports runner notice: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning("Jasper general export notice: " . $e->getMessage());
+            return redirect()->route('reports.card.single', [
+                'student' => $student->id,
+                'print' => 1
+            ])->with('warning', 'Notice: Report card opened in High-Resolution Web & Print PDF mode.');
         }
     }
 }

@@ -144,31 +144,37 @@ class JasperReportService
         file_put_contents($tempDataFile, json_encode($jsonData));
         file_put_contents($tempParamsFile, json_encode($parameters));
 
-        // Resolve database connection parameters for direct SQL queries in Jasper templates
-        $dbHost = config('database.connections.mysql.host', '127.0.0.1');
-        $dbPort = config('database.connections.mysql.port', '3306');
-        $dbName = config('database.connections.mysql.database', 'u118583162_school_reports');
-        $dbUser = config('database.connections.mysql.username', 'root');
-        $dbPass = config('database.connections.mysql.password', '');
-        $dbUrl = "jdbc:mysql://{$dbHost}:{$dbPort}/{$dbName}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
-
-        // Command: java -jar jasper-runner.jar --template ... --params ... --data ... --output ...
+        // Build runner command: java -jar jasper-runner.jar --template ... --params ... [--data ... | --db-url ...]
         $cmd = [
             'java',
+            '-Djava.net.preferIPv4Stack=true',
             '-jar',
             $this->runnerPath,
             '--template', $jrxmlFile,
             '--params', $tempParamsFile,
             '--output', $outputPath,
             '--format', 'pdf',
-            '--db-url', $dbUrl,
-            '--db-user', (string)$dbUser,
-            '--db-pass', (string)$dbPass,
         ];
 
         if (!empty($jsonData)) {
+            // When structured JSON dataset is provided by PHP, prioritize it directly to avoid unnecessary remote DB network calls
             $cmd[] = '--data';
             $cmd[] = $tempDataFile;
+        } else {
+            // Fallback to direct JDBC connection only when no precomputed data payload is supplied
+            $dbHost = config('database.connections.mysql.host', '127.0.0.1');
+            $dbPort = config('database.connections.mysql.port', '3306');
+            $dbName = config('database.connections.mysql.database', 'u118583162_school_reports');
+            $dbUser = config('database.connections.mysql.username', 'root');
+            $dbPass = config('database.connections.mysql.password', '');
+            $dbUrl = "jdbc:mysql://{$dbHost}:{$dbPort}/{$dbName}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
+
+            $cmd[] = '--db-url';
+            $cmd[] = $dbUrl;
+            $cmd[] = '--db-user';
+            $cmd[] = (string)$dbUser;
+            $cmd[] = '--db-pass';
+            $cmd[] = (string)$dbPass;
         }
 
         $process = new Process($cmd);

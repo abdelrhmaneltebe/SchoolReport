@@ -176,7 +176,11 @@ class ReportCardController extends Controller
             $this->jasperService->generateReport('official_report_card_a4.jrxml', $parameters, $subjectRows, $outputPath);
             return response()->download($outputPath);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'JasperReports execution error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning("Jasper official card export notice: " . $e->getMessage());
+            return redirect()->route('reports.card.single', [
+                'student' => $student->id,
+                'print' => 1
+            ])->with('warning', 'Notice: Direct Jasper engine reported an issue (' . $e->getMessage() . '). Switched to High-Resolution Web & Print PDF mode.');
         }
     }
 }

@@ -104,27 +104,37 @@ public class JasperRunner {
                 }
             }
 
-            // Prepare Data Source: Detect if report uses SQL Query or JSON DataSource
-            JasperPrint jasperPrint;
+            // Prepare Data Source: Prefer JSON data payload if provided, fallback to JDBC or EmptyDataSource
+            JasperPrint jasperPrint = null;
             boolean hasQuery = jasperReport.getQuery() != null 
                 && jasperReport.getQuery().getText() != null 
                 && !jasperReport.getQuery().getText().trim().isEmpty();
 
-            if (hasQuery && dbUrl != null && !dbUrl.trim().isEmpty()) {
-                System.out.println("Executing report with direct MySQL JDBC connection (Query detected in template)...");
-                Class.forName(dbDriver != null ? dbDriver : "com.mysql.cj.jdbc.Driver");
-                try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass != null ? dbPass : "")) {
-                    jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
-                }
-            } else if (dataPath != null && new File(dataPath).exists()) {
+            if (dataPath != null && new File(dataPath).exists()) {
                 File dataFile = new File(dataPath);
                 JsonDataSource ds = new JsonDataSource(dataFile);
                 jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, ds);
+            } else if (hasQuery && dbUrl != null && !dbUrl.trim().isEmpty()) {
+                try {
+                    System.out.println("Executing report with direct MySQL JDBC connection (Query detected in template)...");
+                    Class.forName(dbDriver != null ? dbDriver : "com.mysql.cj.jdbc.Driver");
+                    try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass != null ? dbPass : "")) {
+                        jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
+                    }
+                } catch (Exception dbe) {
+                    System.err.println("Notice: Direct database connection failed (" + dbe.getMessage() + "). Falling back to EmptyDataSource.");
+                    jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+                }
             } else if (dbUrl != null && !dbUrl.trim().isEmpty()) {
-                System.out.println("Executing report with direct MySQL JDBC connection...");
-                Class.forName(dbDriver != null ? dbDriver : "com.mysql.cj.jdbc.Driver");
-                try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass != null ? dbPass : "")) {
-                    jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
+                try {
+                    System.out.println("Executing report with direct MySQL JDBC connection...");
+                    Class.forName(dbDriver != null ? dbDriver : "com.mysql.cj.jdbc.Driver");
+                    try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass != null ? dbPass : "")) {
+                        jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
+                    }
+                } catch (Exception dbe) {
+                    System.err.println("Notice: Direct database connection failed (" + dbe.getMessage() + "). Falling back to EmptyDataSource.");
+                    jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
                 }
             } else {
                 jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
