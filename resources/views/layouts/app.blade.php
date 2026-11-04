@@ -6,6 +6,9 @@
     <title>@yield('title', 'School Reporting Department Hub')</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Flatpickr CSS & Custom Sleek Theme -->
+    <link rel="stylesheet" href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/flatpickr/custom-theme.css') }}">
     <style>
         :root {
             --bs-primary: #4f46e5;
@@ -570,6 +573,8 @@
 
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const btnToggle = document.getElementById('btnSidebarToggle');

@@ -106,11 +106,23 @@
                     <label class="form-label fw-bold small text-muted text-uppercase mb-1">
                         🗓️ Date Range:
                     </label>
-                    <div class="input-group input-group-sm shadow-2xs">
-                        <span class="input-group-text bg-light text-muted small">From</span>
-                        <input type="date" name="start_date" class="form-control text-center fw-semibold" value="{{ $startDate }}" onclick="try{this.showPicker()}catch(e){}" onchange="document.getElementById('summaryFilterForm').submit()" style="cursor: pointer;" title="Click to open calendar">
-                        <span class="input-group-text bg-light text-muted small">To</span>
-                        <input type="date" name="end_date" class="form-control text-center fw-semibold" value="{{ $endDate }}" onclick="try{this.showPicker()}catch(e){}" onchange="document.getElementById('summaryFilterForm').submit()" style="cursor: pointer;" title="Click to open calendar">
+                    <div class="input-group input-group-sm shadow-2xs border rounded-3 overflow-hidden bg-white">
+                        <span class="input-group-text bg-white border-0 text-muted small pe-1">From</span>
+                        <input type="text" 
+                               name="start_date" 
+                               id="startDateInput" 
+                               class="form-control text-center fw-bold border-0 bg-white" 
+                               value="{{ $startDate }}"
+                               readonly
+                               style="cursor: pointer; font-size: 0.88rem;">
+                        <span class="input-group-text bg-white border-0 text-muted small px-1">To</span>
+                        <input type="text" 
+                               name="end_date" 
+                               id="endDateInput" 
+                               class="form-control text-center fw-bold border-0 bg-white" 
+                               value="{{ $endDate }}"
+                               readonly
+                               style="cursor: pointer; font-size: 0.88rem;">
                     </div>
                 </div>
 
@@ -234,4 +246,40 @@
     @endif
 
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof flatpickr !== 'undefined') {
+            flatpickr("#startDateInput", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "M j, Y",
+                altInputClass: "form-control text-center fw-bold border-0 bg-white shadow-none",
+                defaultDate: "{{ $startDate }}",
+                disableMobile: true,
+                animate: true,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        document.getElementById('summaryFilterForm').submit();
+                    }
+                }
+            });
+
+            flatpickr("#endDateInput", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "M j, Y",
+                altInputClass: "form-control text-center fw-bold border-0 bg-white shadow-none",
+                defaultDate: "{{ $endDate }}",
+                disableMobile: true,
+                animate: true,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        document.getElementById('summaryFilterForm').submit();
+                    }
+                }
+            });
+        }
+    });
+</script>
 @endsection

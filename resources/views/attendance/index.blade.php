@@ -136,23 +136,25 @@
                     <label class="form-label fw-bold small text-muted text-uppercase mb-1">
                         🗓️ Attendance Date:
                     </label>
-                    <div class="input-group input-group-sm shadow-2xs">
-                        <button type="button" class="btn btn-outline-secondary fw-bold" onclick="jumpDate(-1)" title="Previous Day">
-                            ◀ Prev
+                    <div class="input-group input-group-sm shadow-2xs border rounded-3 overflow-hidden bg-white">
+                        <button type="button" class="btn btn-light border-0 text-muted fw-bold px-2" onclick="jumpDate(-1)" title="Previous Day">
+                            ◀
                         </button>
-                        <input type="date" 
+                        <span class="input-group-text bg-white border-0 text-primary pe-1 ps-2" style="cursor: pointer;" onclick="if(window.fpDate) window.fpDate.open()" title="Click to open calendar">
+                            📅
+                        </span>
+                        <input type="text" 
                                name="date" 
                                id="dateInput" 
-                               class="form-control text-center fw-bold" 
+                               class="form-control text-center fw-bold border-0 bg-white" 
                                value="{{ $date }}" 
-                               onclick="try{this.showPicker()}catch(e){}" 
-                               onchange="document.getElementById('filterForm').submit()"
-                               style="cursor: pointer;"
+                               readonly
+                               style="cursor: pointer; font-size: 0.88rem;"
                                title="Click to open calendar">
-                        <button type="button" class="btn btn-outline-secondary fw-bold" onclick="jumpDate(1)" title="Next Day">
-                            Next ▶
+                        <button type="button" class="btn btn-light border-0 text-muted fw-bold px-2" onclick="jumpDate(1)" title="Next Day">
+                            ▶
                         </button>
-                        <button type="button" class="btn btn-light border fw-semibold" onclick="setToday()">
+                        <button type="button" class="btn btn-primary-subtle text-primary border-0 fw-bold px-3 small" onclick="setToday()">
                             Today
                         </button>
                     </div>
@@ -424,14 +426,43 @@
     const currentSlotName = "{{ $slotName ?? '' }}";
 
     document.addEventListener('DOMContentLoaded', function() {
-        const dateInput = document.getElementById('dateInput');
-        if (dateInput) {
-            dateInput.addEventListener('click', function() {
-                try {
-                    if (typeof this.showPicker === 'function') {
-                        this.showPicker();
+        if (typeof flatpickr !== 'undefined') {
+            window.fpDate = flatpickr("#dateInput", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "D, M j, Y",
+                altInputClass: "form-control text-center fw-bold border-0 bg-white shadow-none",
+                defaultDate: "{{ $date }}",
+                disableMobile: true,
+                animate: true,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        document.getElementById('filterForm').submit();
                     }
-                } catch (e) {}
+                },
+                onReady: function(selectedDates, dateStr, instance) {
+                    const footer = document.createElement('div');
+                    footer.className = 'flatpickr-custom-footer';
+                    footer.innerHTML = `
+                        <button type="button" class="btn-quick" id="fpBtnYesterday">◀ Yesterday</button>
+                        <button type="button" class="btn-quick btn-today" id="fpBtnToday">🎯 Today</button>
+                        <button type="button" class="btn-quick" id="fpBtnTomorrow">Tomorrow ▶</button>
+                    `;
+                    instance.calendarContainer.appendChild(footer);
+
+                    footer.querySelector('#fpBtnYesterday').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        jumpDate(-1);
+                    });
+                    footer.querySelector('#fpBtnToday').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        setToday();
+                    });
+                    footer.querySelector('#fpBtnTomorrow').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        jumpDate(1);
+                    });
+                }
             });
         }
     });
@@ -441,13 +472,21 @@
         if (!dateInput.value) return;
         const current = new Date(dateInput.value);
         current.setDate(current.getDate() + days);
-        dateInput.value = current.toISOString().split('T')[0];
+        const nextVal = current.toISOString().split('T')[0];
+        dateInput.value = nextVal;
+        if (window.fpDate) {
+            window.fpDate.setDate(nextVal, false);
+        }
         document.getElementById('filterForm').submit();
     }
 
     function setToday() {
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dateInput').value = today;
+        const dateInput = document.getElementById('dateInput');
+        dateInput.value = today;
+        if (window.fpDate) {
+            window.fpDate.setDate(today, false);
+        }
         document.getElementById('filterForm').submit();
     }
 
