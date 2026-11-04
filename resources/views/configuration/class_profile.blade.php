@@ -317,8 +317,17 @@
                                 @endphp
                                 <tr>
                                     <td class="text-muted">{{ $idx + 1 }}</td>
-                                    <td class="text-start fw-bold text-primary">{{ $std->admission_number }}</td>
-                                    <td class="text-start fw-bold text-dark fs-6">{{ $std->full_name }}</td>
+                                    <td class="text-start">
+                                        <a href="{{ route('config.students.profile', $std->id) }}" class="fw-bold font-monospace text-primary text-decoration-none hover-primary">
+                                            {{ $std->admission_number }}
+                                        </a>
+                                    </td>
+                                    <td class="text-start">
+                                        <a href="{{ route('config.students.profile', $std->id) }}" class="fw-bold text-dark fs-6 text-decoration-none hover-primary d-inline-flex align-items-center gap-1">
+                                            <span>{{ $std->full_name }}</span>
+                                            <span class="text-muted small">↗</span>
+                                        </a>
+                                    </td>
                                     <td>{{ $std->gender ?? 'N/A' }}</td>
                                     <td>
                                         <span class="badge {{ $std->status === 'ACTIVE' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-muted' }} border">
@@ -345,6 +354,9 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('config.students.profile', $std->id) }}" class="btn btn-primary py-0 px-2 fw-bold" title="View Student Profile">
+                                                👤 Profile
+                                            </a>
                                             <a href="{{ route('reports.preview', $std->id) }}" class="btn btn-outline-primary py-0 px-2 fw-semibold" title="Preview Student Report Card">
                                                 👁️ Preview
                                             </a>

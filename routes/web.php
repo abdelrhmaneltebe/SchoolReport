@@ -118,6 +118,8 @@ Route::match(['get', 'post', 'delete'], '/configuration/subjects/{id}/delete', [
 
 // Student Directory & Bulk Enrollment Studio
 Route::get('/configuration/students', [StudentEnrollmentController::class, 'index'])->name('config.students.index');
+Route::get('/configuration/students/{id}/profile', [StudentEnrollmentController::class, 'profile'])->name('config.students.profile');
+Route::get('/students/{id}', [StudentEnrollmentController::class, 'profile'])->name('students.profile');
 Route::post('/configuration/students', [StudentEnrollmentController::class, 'store'])->name('config.students.store');
 Route::post('/configuration/students/{id}/update', [StudentEnrollmentController::class, 'update'])->name('config.students.update');
 Route::match(['get', 'post', 'delete'], '/configuration/students/{id}/delete', [StudentEnrollmentController::class, 'destroy'])->name('config.students.delete');

@@ -219,8 +219,17 @@
                                 @endphp
                                 <tr>
                                     <td class="text-muted">{{ $students->firstItem() + $idx }}</td>
-                                    <td class="text-start fw-bold text-primary">{{ $std->admission_number }}</td>
-                                    <td class="text-start fw-bold text-dark fs-6">{{ $std->full_name }}</td>
+                                    <td class="text-start">
+                                        <a href="{{ route('config.students.profile', $std->id) }}" class="fw-bold font-monospace text-primary text-decoration-none hover-primary">
+                                            {{ $std->admission_number }}
+                                        </a>
+                                    </td>
+                                    <td class="text-start">
+                                        <a href="{{ route('config.students.profile', $std->id) }}" class="fw-bold text-dark fs-6 text-decoration-none hover-primary d-inline-flex align-items-center gap-1.5">
+                                            <span>{{ $std->full_name }}</span>
+                                            <span class="text-muted small" style="font-size: 0.75rem;">↗</span>
+                                        </a>
+                                    </td>
                                     <td class="text-start">
                                         @if($std->schoolClass)
                                             <a href="{{ route('config.classes.profile', $std->schoolClass->id) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
@@ -265,6 +274,9 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('config.students.profile', $std->id) }}" class="btn btn-primary py-0 px-2 fw-bold" title="View Student 360 Profile">
+                                                👤 Profile
+                                            </a>
                                             <a href="{{ route('reports.preview', $std->id) }}" class="btn btn-outline-primary py-0 px-2 fw-semibold" title="Preview Report Card">
                                                 👁️
                                             </a>

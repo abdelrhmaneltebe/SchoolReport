@@ -122,6 +122,108 @@ class StudentEnrollmentController extends Controller
     }
 
     /**
+     * Display comprehensive Student 360 Profile.
+     */
+    public function profile(Request $request, $id)
+    {
+        $activeSchool = $this->resolveActiveSchool($request);
+
+        $student = Student::where('school_id', $activeSchool->school_id)
+            ->with([
+                'schoolClass.gradeLevel.division',
+                'schoolClass.subjectAssignments.subject',
+                'attendanceRecords' => function ($q) {
+                    $q->orderBy('attendance_date', 'desc');
+                },
+                'gradeRecords.assignment.subject',
+                'subScores.category',
+                'enrolledCourses.subject'
+            ])
+            ->findOrFail($id);
+
+        $analyticsService = app(\App\Services\ReportAnalyticsService::class);
+        $reportData = $analyticsService->buildStudentReportCardData($student);
+
+        // Standardize view accessors for subject rows & summary metrics
+        $subjectRows = $reportData['subjectRows'] ?? $reportData['subjects'] ?? [];
+        $reportData['subjects'] = $subjectRows;
+        $reportData['summary'] = [
+            'cumulativeGpa' => $reportData['metrics']['cumulativeGpa'] ?? 0.0,
+            'overallPercentage' => $reportData['metrics']['overallPercentage'] ?? 0.0,
+            'honorStatus' => $reportData['metrics']['honorStatus'] ?? 'Good Standing',
+            'passedSubjectsCount' => $reportData['metrics']['passedSubjects'] ?? 0,
+            'totalSubjectsCount' => $reportData['metrics']['totalSubjects'] ?? count($subjectRows),
+            'overallGrade' => $reportData['metrics']['letterGrade'] ?? 'N/A',
+            'totalCredits' => array_sum(array_column($subjectRows, 'credits')),
+            'totalRawScore' => array_sum(array_column($subjectRows, 'rawScore')),
+            'totalMaxScore' => array_sum(array_column($subjectRows, 'maxScore')),
+        ];
+
+        // Grade levels & classes for re-assignment modal
+        $allLevels = SchoolGradeLevel::where('school_id', $activeSchool->school_id)
+            ->with(['classes' => function ($q) {
+                $q->withCount('students')->orderBy('class_name');
+            }])
+            ->orderBy('display_order')
+            ->get();
+
+        $allClasses = SchoolClass::where('school_id', $activeSchool->school_id)
+            ->with('gradeLevel')
+            ->orderBy('class_name')
+            ->get();
+
+        // Calculate attendance metrics
+        $attendanceRecords = $student->attendanceRecords;
+        $totalAttendanceCount = $attendanceRecords->count();
+        $presentCount = $attendanceRecords->where('status', 'PRESENT')->count();
+        $excusedCount = $attendanceRecords->where('status', 'EXCUSED')->count();
+        $unexcusedCount = $attendanceRecords->where('status', 'UNEXCUSED')->count();
+        $tardyCount = $attendanceRecords->where('status', 'TARDY')->count();
+        $attendanceRate = $totalAttendanceCount > 0
+            ? round((($presentCount + $tardyCount) / $totalAttendanceCount) * 100.0, 1)
+            : 100.0;
+
+        // Class standing / rank among peers in same class
+        $classRank = null;
+        $classTotalStudents = 0;
+        if ($student->schoolClass) {
+            $classStudents = $student->schoolClass->students()->with('gradeRecords')->get();
+            $classTotalStudents = $classStudents->count();
+
+            $scores = [];
+            foreach ($classStudents as $cs) {
+                $scores[$cs->id] = $cs->gradeRecords->isNotEmpty() ? $cs->gradeRecords->avg('total_score') : 0;
+            }
+            arsort($scores);
+            $rankCounter = 1;
+            foreach ($scores as $sId => $score) {
+                if ($sId === $student->id) {
+                    $classRank = $rankCounter;
+                    break;
+                }
+                $rankCounter++;
+            }
+        }
+
+        return view('configuration.student_profile', compact(
+            'activeSchool',
+            'student',
+            'reportData',
+            'allLevels',
+            'allClasses',
+            'attendanceRecords',
+            'totalAttendanceCount',
+            'presentCount',
+            'excusedCount',
+            'unexcusedCount',
+            'tardyCount',
+            'attendanceRate',
+            'classRank',
+            'classTotalStudents'
+        ));
+    }
+
+    /**
      * Enroll an individual student.
      */
     public function store(Request $request)

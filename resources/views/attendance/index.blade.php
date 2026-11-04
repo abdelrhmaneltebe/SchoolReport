@@ -328,7 +328,10 @@
                                                     {{ strtoupper(substr($student->full_name, 0, 2)) }}
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold text-dark small lh-sm">{{ $student->full_name }}</div>
+                                                    <a href="{{ route('config.students.profile', $student->id) }}" target="_blank" class="fw-bold text-dark small lh-sm text-decoration-none hover-primary d-inline-flex align-items-center gap-1" title="View Student Profile">
+                                                        <span>{{ $student->full_name }}</span>
+                                                        <span class="text-muted" style="font-size: 0.65rem;">↗</span>
+                                                    </a>
                                                     <div class="text-muted" style="font-size: 0.72rem;">
                                                         ID: <span class="font-monospace fw-semibold">{{ $student->admission_number }}</span>
                                                         @if($student->gender)

@@ -220,8 +220,17 @@
                                 @endphp
                                 <tr>
                                     <td class="text-muted">{{ $idx + 1 }}</td>
-                                    <td class="text-start fw-bold text-primary">{{ $std->admission_number }}</td>
-                                    <td class="text-start fw-bold text-dark fs-6">{{ $std->full_name }}</td>
+                                    <td class="text-start">
+                                        <a href="{{ route('config.students.profile', $std->id) }}" class="fw-bold font-monospace text-primary text-decoration-none hover-primary">
+                                            {{ $std->admission_number }}
+                                        </a>
+                                    </td>
+                                    <td class="text-start">
+                                        <a href="{{ route('config.students.profile', $std->id) }}" class="fw-bold text-dark fs-6 text-decoration-none hover-primary d-inline-flex align-items-center gap-1">
+                                            <span>{{ $std->full_name }}</span>
+                                            <span class="text-muted small" style="font-size: 0.7rem;">↗</span>
+                                        </a>
+                                    </td>
                                     <td>
                                         {{ $record ? number_format($record->cw_score, 1) : '-' }}
                                     </td>
