@@ -130,6 +130,12 @@ class AttendanceManagementTest extends TestCase
         $response->assertSee('Bob Builder');
         $response->assertSee('Charlie Clark');
         $response->assertSee('Full Day (Homeroom Roll Call)');
+        $response->assertSee('studentSearchInput');
+        $response->assertSee('filterBtnAll');
+        $response->assertSee('filterBtnPresent');
+        $response->assertSee('filterBtnUnexcused');
+        $response->assertSee('visibleStudentCount');
+        $response->assertSee('noResultsRow');
     }
 
     /**

@@ -279,6 +279,9 @@
                         <span id="ajaxSaveStatus" class="badge bg-success-subtle text-success border border-success-subtle small px-2 py-1 d-none">
                             ✓ Saved live
                         </span>
+                        <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 shadow-2xs" onclick="markAllPresent()" title="Mark all enrolled students as Present">
+                            ⚡ Mark All Present
+                        </button>
                         <button type="submit" class="btn btn-sm btn-primary fw-bold px-3 shadow-2xs">
                             💾 Save All Attendance
                         </button>
@@ -301,6 +304,58 @@
                         </a>
                     </div>
                 @else
+                    <!-- Filter and Search Toolbar -->
+                    <div class="bg-white border-bottom p-3">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <!-- Search Box -->
+                            <div class="flex-grow-1" style="min-width: 240px; max-width: 360px;">
+                                <div class="input-group input-group-sm border rounded-3 overflow-hidden shadow-2xs">
+                                    <span class="input-group-text bg-light border-0 text-muted ps-3 pe-2">
+                                        🔍
+                                    </span>
+                                    <input type="text" 
+                                           id="studentSearchInput" 
+                                           class="form-control border-0 ps-1 bg-white" 
+                                           placeholder="Search student by name or ID..." 
+                                           autocomplete="off"
+                                           oninput="applyAttendanceFilters()"
+                                           aria-label="Search student">
+                                    <button class="btn btn-light border-0 text-muted px-2 d-none" 
+                                            type="button" 
+                                            id="clearSearchBtn" 
+                                            onclick="clearSearchInput()"
+                                            title="Clear search">✕</button>
+                                </div>
+                            </div>
+
+                            <!-- Status Filter Pills & Counter -->
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="text-muted small fw-semibold text-uppercase me-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">Filter:</span>
+                                <div class="btn-group btn-group-sm shadow-2xs" role="group" aria-label="Status filter">
+                                    <button type="button" class="btn btn-sm btn-dark text-white fw-bold px-2 py-1 att-filter-btn" id="filterBtnAll" onclick="setStatusFilter('ALL')">
+                                        All <span class="badge bg-light text-dark ms-1" id="filterCountAll">{{ $students->count() }}</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-bold px-2 py-1 att-filter-btn" id="filterBtnPresent" onclick="setStatusFilter('PRESENT')">
+                                        🟢 Present <span class="badge bg-success-subtle text-success ms-1" id="filterCountPresent">{{ $stats['present'] }}</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-2 py-1 att-filter-btn" id="filterBtnUnexcused" onclick="setStatusFilter('UNEXCUSED')">
+                                        🔴 Absent <span class="badge bg-danger-subtle text-danger ms-1" id="filterCountUnexcused">{{ $stats['unexcused'] }}</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning text-dark fw-bold px-2 py-1 att-filter-btn" id="filterBtnExcused" onclick="setStatusFilter('EXCUSED')">
+                                        🟠 Excused <span class="badge bg-warning-subtle text-dark ms-1" id="filterCountExcused">{{ $stats['excused'] }}</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info text-dark fw-bold px-2 py-1 att-filter-btn" id="filterBtnTardy" onclick="setStatusFilter('TARDY')">
+                                        🔵 Tardy <span class="badge bg-info-subtle text-dark ms-1" id="filterCountTardy">{{ $stats['tardy'] }}</span>
+                                    </button>
+                                </div>
+
+                                <div class="badge bg-light text-secondary border px-2 py-1 small fw-normal ms-1">
+                                    Showing <strong id="visibleStudentCount" class="text-dark">{{ $students->count() }}</strong> of {{ $students->count() }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light text-muted small text-uppercase">
@@ -312,13 +367,27 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr id="noResultsRow" style="display: none;">
+                                    <td colspan="4" class="text-center py-5 text-muted bg-light-subtle">
+                                        <div class="fs-1 mb-2">🔍</div>
+                                        <h6 class="fw-bold text-dark mb-1">No Matching Students Found</h6>
+                                        <p class="small text-muted mb-3">No student matched your search query or selected attendance status filter.</p>
+                                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold px-3 shadow-2xs" onclick="resetAttendanceFilters()">
+                                            ✕ Reset Search &amp; Show All
+                                        </button>
+                                    </td>
+                                </tr>
                                 @foreach($students as $index => $student)
                                     @php
                                         $rec = $existingRecords->get($student->id);
                                         $currentStatus = $rec ? $rec->status : 'PRESENT';
                                         $currentRemarks = $rec ? $rec->remarks : '';
                                     @endphp
-                                    <tr id="row-{{ $student->id }}" class="transition">
+                                    <tr id="row-{{ $student->id }}" 
+                                        class="transition att-student-row"
+                                        data-student-name="{{ strtolower($student->full_name) }}"
+                                        data-admission-number="{{ strtolower($student->admission_number) }}"
+                                        data-student-id="{{ $student->id }}">
                                         <td class="text-center text-muted fw-bold small">
                                             {{ $index + 1 }}
                                         </td>
@@ -422,13 +491,28 @@
 
 </div>
 
-<!-- JavaScript for Dynamic Interactions & Live Auto-Save -->
+<!-- JavaScript for Dynamic Interactions, Filter & Search, & Live Auto-Save -->
 <script>
     const currentMode = "{{ $mode }}";
     const currentAssignmentId = "{{ $selectedAssignment?->id ?? '' }}";
     const currentSlotName = "{{ $slotName ?? '' }}";
+    let currentFilterStatus = 'ALL';
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Prevent form submission on Enter inside search bar
+        const searchInput = document.getElementById('studentSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Initialize Filter Badges
+        updateFilterBadges();
+
+        // Calendar Flatpickr Initialization
         if (typeof flatpickr !== 'undefined') {
             window.fpDate = flatpickr("#dateInput", {
                 dateFormat: "Y-m-d",
@@ -470,6 +554,120 @@
         }
     });
 
+    /* ==========================================================================
+       Status Filter & Live Search Functions
+       ========================================================================== */
+    function setStatusFilter(status) {
+        currentFilterStatus = status;
+
+        const btnAll = document.getElementById('filterBtnAll');
+        const btnPresent = document.getElementById('filterBtnPresent');
+        const btnUnexcused = document.getElementById('filterBtnUnexcused');
+        const btnExcused = document.getElementById('filterBtnExcused');
+        const btnTardy = document.getElementById('filterBtnTardy');
+
+        // Reset all buttons to outline style
+        if (btnAll) btnAll.className = 'btn btn-sm btn-outline-secondary fw-bold px-2 py-1 att-filter-btn';
+        if (btnPresent) btnPresent.className = 'btn btn-sm btn-outline-success fw-bold px-2 py-1 att-filter-btn';
+        if (btnUnexcused) btnUnexcused.className = 'btn btn-sm btn-outline-danger fw-bold px-2 py-1 att-filter-btn';
+        if (btnExcused) btnExcused.className = 'btn btn-sm btn-outline-warning text-dark fw-bold px-2 py-1 att-filter-btn';
+        if (btnTardy) btnTardy.className = 'btn btn-sm btn-outline-info text-dark fw-bold px-2 py-1 att-filter-btn';
+
+        // Apply active solid styling
+        if (status === 'ALL' && btnAll) {
+            btnAll.className = 'btn btn-sm btn-dark text-white fw-bold px-2 py-1 att-filter-btn shadow-xs active';
+        } else if (status === 'PRESENT' && btnPresent) {
+            btnPresent.className = 'btn btn-sm btn-success text-white fw-bold px-2 py-1 att-filter-btn shadow-xs active';
+        } else if (status === 'UNEXCUSED' && btnUnexcused) {
+            btnUnexcused.className = 'btn btn-sm btn-danger text-white fw-bold px-2 py-1 att-filter-btn shadow-xs active';
+        } else if (status === 'EXCUSED' && btnExcused) {
+            btnExcused.className = 'btn btn-sm btn-warning text-dark fw-bold px-2 py-1 att-filter-btn shadow-xs active';
+        } else if (status === 'TARDY' && btnTardy) {
+            btnTardy.className = 'btn btn-sm btn-info text-dark fw-bold px-2 py-1 att-filter-btn shadow-xs active';
+        }
+
+        applyAttendanceFilters();
+    }
+
+    function applyAttendanceFilters() {
+        const searchInput = document.getElementById('studentSearchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+        if (clearBtn) {
+            clearBtn.classList.toggle('d-none', query.length === 0);
+        }
+
+        const rows = document.querySelectorAll('.att-student-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = (row.getAttribute('data-student-name') || '').toLowerCase();
+            const adm = (row.getAttribute('data-admission-number') || '').toLowerCase();
+
+            const checkedRadio = row.querySelector('input.att-radio:checked');
+            const status = checkedRadio ? checkedRadio.value : 'PRESENT';
+
+            const matchesQuery = !query || name.includes(query) || adm.includes(query);
+            const matchesStatus = (currentFilterStatus === 'ALL') || (status === currentFilterStatus);
+
+            if (matchesQuery && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const visibleEl = document.getElementById('visibleStudentCount');
+        if (visibleEl) visibleEl.textContent = visibleCount;
+
+        const noResultsRow = document.getElementById('noResultsRow');
+        if (noResultsRow) {
+            noResultsRow.style.display = (visibleCount === 0) ? '' : 'none';
+        }
+    }
+
+    function clearSearchInput() {
+        const searchInput = document.getElementById('studentSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        applyAttendanceFilters();
+    }
+
+    function resetAttendanceFilters() {
+        const searchInput = document.getElementById('studentSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        setStatusFilter('ALL');
+    }
+
+    function updateFilterBadges() {
+        const present = document.querySelectorAll('input.att-radio[value="PRESENT"]:checked').length;
+        const unexcused = document.querySelectorAll('input.att-radio[value="UNEXCUSED"]:checked').length;
+        const excused = document.querySelectorAll('input.att-radio[value="EXCUSED"]:checked').length;
+        const tardy = document.querySelectorAll('input.att-radio[value="TARDY"]:checked').length;
+        const total = document.querySelectorAll('.att-student-row').length;
+
+        const elAll = document.getElementById('filterCountAll');
+        const elPres = document.getElementById('filterCountPresent');
+        const elUnex = document.getElementById('filterCountUnexcused');
+        const elExc = document.getElementById('filterCountExcused');
+        const elTar = document.getElementById('filterCountTardy');
+
+        if (elAll) elAll.textContent = total;
+        if (elPres) elPres.textContent = present;
+        if (elUnex) elUnex.textContent = unexcused;
+        if (elExc) elExc.textContent = excused;
+        if (elTar) elTar.textContent = tardy;
+    }
+
+    /* ==========================================================================
+       Date Helpers & Quick Actions
+       ========================================================================== */
     function jumpDate(days) {
         const dateInput = document.getElementById('dateInput');
         if (!dateInput.value) return;
@@ -494,17 +692,24 @@
     }
 
     function markAllPresent() {
-        const presentRadios = document.querySelectorAll('input[type="radio"][value="PRESENT"]');
+        const presentRadios = document.querySelectorAll('input.att-radio[value="PRESENT"]');
         presentRadios.forEach(radio => {
             radio.checked = true;
         });
         showStatusNotice('Marked all as Present. Click Save All or let auto-save persist.');
         recalcStatsLocally();
+        updateFilterBadges();
+        applyAttendanceFilters();
     }
 
     function quickSaveStudent(studentId, status) {
         const remarks = document.getElementById('remarks-' + studentId)?.value || '';
         const date = document.getElementById('dateInput').value;
+
+        // Immediately update local badges & filters
+        updateFilterBadges();
+        applyAttendanceFilters();
+        recalcStatsLocally();
 
         const payload = {
             student_id: studentId,
@@ -556,10 +761,10 @@
     }
 
     function recalcStatsLocally() {
-        const present = document.querySelectorAll('input[type="radio"][value="PRESENT"]:checked').length;
-        const unexcused = document.querySelectorAll('input[type="radio"][value="UNEXCUSED"]:checked').length;
-        const excused = document.querySelectorAll('input[type="radio"][value="EXCUSED"]:checked').length;
-        const tardy = document.querySelectorAll('input[type="radio"][value="TARDY"]:checked').length;
+        const present = document.querySelectorAll('input.att-radio[value="PRESENT"]:checked').length;
+        const unexcused = document.querySelectorAll('input.att-radio[value="UNEXCUSED"]:checked').length;
+        const excused = document.querySelectorAll('input.att-radio[value="EXCUSED"]:checked').length;
+        const tardy = document.querySelectorAll('input.att-radio[value="TARDY"]:checked').length;
         const total = present + unexcused + excused + tardy;
 
         const stats = {
