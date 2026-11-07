@@ -454,6 +454,10 @@
                             <span class="sidebar-icon">🏢</span>
                             <span>Manage Schools</span>
                         </a>
+                        <a href="{{ route('admin.plans.index') }}" class="sidebar-link {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}">
+                            <span class="sidebar-icon">💎</span>
+                            <span>Subscription Plans</span>
+                        </a>
                         <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <span class="sidebar-icon">👤</span>
                             <span>User Directory</span>

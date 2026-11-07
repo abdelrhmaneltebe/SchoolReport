@@ -61,10 +61,20 @@
                             <div>
                                 <span class="badge bg-primary px-2 py-1 small font-monospace">{{ $school->school_code }}</span>
                                 <span class="badge bg-secondary-subtle text-secondary small ms-1">{{ $school->school_id }}</span>
+                                @if($school->plan)
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small ms-1 fw-bold">
+                                        💎 {{ $school->plan->name }}
+                                    </span>
+                                @endif
                             </div>
-                            <span class="badge {{ $activeSchoolId === $school->school_id ? 'bg-success text-white' : 'bg-light text-muted border' }} px-2 py-1 small">
-                                {{ $activeSchoolId === $school->school_id ? '● CURRENT WORKSPACE' : 'INDEPENDENT TENANT' }}
-                            </span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge {{ $school->getSubscriptionStatusBadgeClass() }} px-2 py-1 small">
+                                    ● {{ $school->subscription_status ?? 'ACTIVE' }}
+                                </span>
+                                <span class="badge {{ $activeSchoolId === $school->school_id ? 'bg-success text-white' : 'bg-light text-muted border' }} px-2 py-1 small">
+                                    {{ $activeSchoolId === $school->school_id ? 'CURRENT' : 'TENANT' }}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="d-flex align-items-center gap-3 mb-2">
@@ -114,14 +124,60 @@
                     </div>
 
                     <div class="border-top pt-3 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold py-1 px-2" data-bs-toggle="modal" data-bs-target="#editSchoolModal_{{ $school->id }}">
-                            ✏️ Edit &amp; Logo
-                        </button>
+                        <div class="d-flex align-items-center gap-1">
+                            <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold py-1 px-2" data-bs-toggle="modal" data-bs-target="#editSchoolModal_{{ $school->id }}">
+                                ✏️ Edit &amp; Logo
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary fw-semibold py-1 px-2" data-bs-toggle="modal" data-bs-target="#changePlanModal_{{ $school->id }}">
+                                💎 Plan
+                            </button>
+                        </div>
                         <a href="{{ route('admin.schools.switch', $school->school_id) }}" 
                            class="btn btn-sm {{ $activeSchoolId === $school->school_id ? 'btn-success' : 'btn-outline-primary' }} fw-bold px-3">
                             {{ $activeSchoolId === $school->school_id ? '✓ Working in School' : 'Enter School Workspace →' }}
                         </a>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Change Plan Quick -->
+        <div class="modal fade" id="changePlanModal_{{ $school->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <form action="{{ route('admin.plans.assign_school') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="school_id" value="{{ $school->school_id }}">
+                        <div class="modal-header bg-dark text-white p-3">
+                            <h5 class="modal-title fw-bold">💎 Change Plan — {{ $school->school_name }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Select Subscription Plan <span class="text-danger">*</span></label>
+                                <select name="plan_id" class="form-select" required>
+                                    @foreach($plans as $pl)
+                                        <option value="{{ $pl->id }}" {{ $school->plan_id == $pl->id ? 'selected' : '' }}>
+                                            {{ $pl->name }} (${{ number_format($pl->price, 2) }}/{{ $pl->billing_cycle }}) — {{ count($pl->features ?? []) }} Features
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Subscription Status <span class="text-danger">*</span></label>
+                                <select name="subscription_status" class="form-select" required>
+                                    <option value="ACTIVE" {{ ($school->subscription_status ?? 'ACTIVE') === 'ACTIVE' ? 'selected' : '' }}>ACTIVE (Full Access to Plan Modules)</option>
+                                    <option value="TRIAL" {{ ($school->subscription_status ?? '') === 'TRIAL' ? 'selected' : '' }}>TRIAL</option>
+                                    <option value="EXPIRED" {{ ($school->subscription_status ?? '') === 'EXPIRED' ? 'selected' : '' }}>EXPIRED</option>
+                                    <option value="SUSPENDED" {{ ($school->subscription_status ?? '') === 'SUSPENDED' ? 'selected' : '' }}>SUSPENDED</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light p-3">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary fw-bold px-4">✓ Update Plan</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -170,6 +226,25 @@
                                         <option value="GPA_4_0" {{ $school->active_scale_model === 'GPA_4_0' ? 'selected' : '' }}>Letter Grade + GPA (4.0 Scale)</option>
                                         <option value="FRENCH_20" {{ $school->active_scale_model === 'FRENCH_20' ? 'selected' : '' }}>French Baccalaureate (0 - 20 pts)</option>
                                         <option value="IGCSE_9_1" {{ $school->active_scale_model === 'IGCSE_9_1' ? 'selected' : '' }}>British IGCSE (9 to 1 Scale)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Subscription Plan Tier</label>
+                                    <select name="plan_id" class="form-select">
+                                        @foreach($plans as $pl)
+                                            <option value="{{ $pl->id }}" {{ $school->plan_id == $pl->id ? 'selected' : '' }}>
+                                                {{ $pl->name }} (${{ number_format($pl->price, 2) }}/{{ $pl->billing_cycle }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Subscription Status</label>
+                                    <select name="subscription_status" class="form-select">
+                                        <option value="ACTIVE" {{ ($school->subscription_status ?? 'ACTIVE') === 'ACTIVE' ? 'selected' : '' }}>ACTIVE (Full Access)</option>
+                                        <option value="TRIAL" {{ ($school->subscription_status ?? '') === 'TRIAL' ? 'selected' : '' }}>TRIAL</option>
+                                        <option value="EXPIRED" {{ ($school->subscription_status ?? '') === 'EXPIRED' ? 'selected' : '' }}>EXPIRED</option>
+                                        <option value="SUSPENDED" {{ ($school->subscription_status ?? '') === 'SUSPENDED' ? 'selected' : '' }}>SUSPENDED</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -243,6 +318,16 @@
                                 <option value="GPA_4_0">Letter Grade + GPA (4.0 Scale)</option>
                                 <option value="FRENCH_20">French Baccalaureate (0 - 20 pts)</option>
                                 <option value="IGCSE_9_1">British IGCSE (9 to 1 Scale)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Assigned Subscription Plan</label>
+                            <select name="plan_id" class="form-select">
+                                @foreach($plans as $pl)
+                                    <option value="{{ $pl->id }}" {{ $pl->is_default ? 'selected' : '' }}>
+                                        {{ $pl->name }} (${{ number_format($pl->price, 2) }}/{{ $pl->billing_cycle }}) {{ $pl->is_default ? '★ Default' : '' }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">

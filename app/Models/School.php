@@ -11,6 +11,15 @@ class School extends Model
 
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'custom_features' => 'array',
+            'subscription_starts_at' => 'datetime',
+            'subscription_expires_at' => 'datetime',
+        ];
+    }
+
     /**
      * The "booted" method of the model.
      * Automatically provisions report directories whenever a school is created.
@@ -263,5 +272,64 @@ class School extends Model
     public function adminUser()
     {
         return $this->hasOne(User::class, 'school_id', 'school_id')->where('role', 'SCHOOL_ADMIN');
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class, 'plan_id');
+    }
+
+    /**
+     * Check if this school has access to a specific feature.
+     * Super Admin bypasses all feature restrictions.
+     */
+    public function hasFeature(string $featureKey): bool
+    {
+        // 1. Super Admin bypass
+        if (auth()->check() && auth()->user()->isSuperAdmin()) {
+            return true;
+        }
+
+        // 2. Custom override features on the school
+        if (!empty($this->custom_features) && is_array($this->custom_features)) {
+            if (in_array($featureKey, $this->custom_features, true)) {
+                return true;
+            }
+        }
+
+        // 3. Subscription status check (if expired or suspended, restrict features)
+        if (in_array($this->subscription_status, ['EXPIRED', 'SUSPENDED'], true)) {
+            return false;
+        }
+
+        // 4. Check assigned plan
+        if ($this->plan) {
+            return $this->plan->hasFeature($featureKey);
+        }
+
+        // 5. Default fallback if no plan is explicitly assigned
+        return true;
+    }
+
+    /**
+     * Display name of the school's plan.
+     */
+    public function getPlanNameAttribute(): string
+    {
+        return $this->plan ? $this->plan->name : 'Standard Tier';
+    }
+
+    /**
+     * Badge CSS class for subscription status.
+     */
+    public function getSubscriptionStatusBadgeClass(): string
+    {
+        return match ($this->subscription_status) {
+            'ACTIVE' => 'bg-success text-white',
+            'TRIAL' => 'bg-info text-dark',
+            'EXPIRED' => 'bg-warning text-dark',
+            'SUSPENDED' => 'bg-danger text-white',
+            default => 'bg-secondary text-white',
+        };
     }
 }

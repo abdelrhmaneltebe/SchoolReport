@@ -38,6 +38,9 @@ class SchoolProvisioningService
                 'city' => $schoolData['city'] ?? 'City',
                 'country' => $schoolData['country'] ?? 'United States',
                 'active_scale_model' => $schoolData['active_scale_model'] ?? 'PERCENTAGE_100',
+                'plan_id' => $schoolData['plan_id'] ?? null,
+                'subscription_status' => $schoolData['subscription_status'] ?? 'ACTIVE',
+                'subscription_starts_at' => now(),
                 'is_active' => true,
             ]);
 

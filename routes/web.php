@@ -12,6 +12,7 @@ use App\Http\Controllers\StudentEnrollmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Admin\SchoolManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\PlanManagementController;
 
 // 1. Authentication & Session Portal
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -34,6 +35,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('/users/{id}', [UserManagementController::class, 'update'])->name('users.update');
     Route::post('/users/{id}/update', [UserManagementController::class, 'update'])->name('users.update_post');
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+
+    // Subscription & Feature Plans Management
+    Route::get('/plans', [PlanManagementController::class, 'index'])->name('plans.index');
+    Route::post('/plans', [PlanManagementController::class, 'store'])->name('plans.store');
+    Route::match(['put', 'post'], '/plans/{id}/update', [PlanManagementController::class, 'update'])->name('plans.update');
+    Route::delete('/plans/{id}', [PlanManagementController::class, 'destroy'])->name('plans.destroy');
+    Route::post('/plans/assign-school', [PlanManagementController::class, 'assignSchool'])->name('plans.assign_school');
 });
 
 // School Profile, Branding & Logo Management (Accessible to School Admin & Super Admin)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\School;
+use App\Models\Plan;
 use App\Services\SchoolProvisioningService;
 
 class SchoolManagementController extends Controller
@@ -22,13 +23,14 @@ class SchoolManagementController extends Controller
     public function index()
     {
         $schools = School::withCount(['students', 'classes', 'users'])
-            ->with('adminUser')
+            ->with(['adminUser', 'plan'])
             ->orderBy('id', 'desc')
             ->get();
 
+        $plans = Plan::active()->ordered()->get();
         $activeSchoolId = session('active_school_id', $schools->first()->school_id ?? null);
 
-        return view('admin.schools.index', compact('schools', 'activeSchoolId'));
+        return view('admin.schools.index', compact('schools', 'plans', 'activeSchoolId'));
     }
 
     /**
@@ -43,6 +45,7 @@ class SchoolManagementController extends Controller
             'contact_email' => 'nullable|email|max:150',
             'contact_phone' => 'nullable|string|max:50',
             'active_scale_model' => 'required|string',
+            'plan_id' => 'nullable|exists:plans,id',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:5120',
@@ -51,6 +54,8 @@ class SchoolManagementController extends Controller
             'admin_password' => 'required|string|min:6'
         ]);
 
+        $defaultPlan = Plan::where('is_default', true)->first() ?? Plan::first();
+
         $schoolData = [
             'school_name' => $validated['school_name'],
             'school_code' => $validated['school_code'],
@@ -58,6 +63,8 @@ class SchoolManagementController extends Controller
             'contact_email' => $validated['contact_email'] ?? null,
             'contact_phone' => $validated['contact_phone'] ?? null,
             'active_scale_model' => $validated['active_scale_model'] ?? 'PERCENTAGE_100',
+            'plan_id' => $validated['plan_id'] ?? ($defaultPlan?->id),
+            'subscription_status' => 'ACTIVE',
             'address' => $validated['address'] ?? null,
             'city' => $validated['city'] ?? 'Default City'
         ];
@@ -96,6 +103,8 @@ class SchoolManagementController extends Controller
             'contact_email' => 'nullable|email|max:150',
             'contact_phone' => 'nullable|string|max:50',
             'active_scale_model' => 'required|string',
+            'plan_id' => 'nullable|exists:plans,id',
+            'subscription_status' => 'nullable|in:ACTIVE,TRIAL,EXPIRED,SUSPENDED',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:5120',
@@ -107,6 +116,12 @@ class SchoolManagementController extends Controller
         $school->contact_email = $validated['contact_email'] ?? $school->contact_email;
         $school->contact_phone = $validated['contact_phone'] ?? $school->contact_phone;
         $school->active_scale_model = $validated['active_scale_model'] ?? $school->active_scale_model;
+        if ($request->filled('plan_id')) {
+            $school->plan_id = $request->input('plan_id');
+        }
+        if ($request->filled('subscription_status')) {
+            $school->subscription_status = $request->input('subscription_status');
+        }
         $school->address = $validated['address'] ?? $school->address;
         $school->city = $validated['city'] ?? $school->city;
 
