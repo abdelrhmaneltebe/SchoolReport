@@ -538,7 +538,7 @@
                                         <li class="py-1.5 d-flex align-items-center justify-content-between {{ $isIncluded ? 'text-dark' : 'text-muted opacity-40' }}">
                                             <div class="d-flex align-items-center gap-2">
                                                 <span>{{ $fMeta['icon'] }}</span>
-                                                <span class="{{ $isIncluded ? 'fw-medium' : 'text-decoration-line-through' }}">{{ $fMeta['name'] }}</span>
+                                                <span class="{{ $isIncluded ? 'fw-medium' : 'text-decoration-line-through' }}">{{ $plan->getFeatureDisplayName($fKey) }}</span>
                                                 @if($fKey === 'student_profiles' && $isIncluded)
                                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0" style="font-size: 0.68rem;">
                                                         {{ $plan->max_students ? number_format($plan->max_students) . ' Students Max' : 'Unlimited' }}

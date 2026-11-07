@@ -114,6 +114,7 @@ class PlanManagementTest extends TestCase
             'billing_cycle' => 'yearly',
             'max_students' => 5000,
             'max_classes' => 200,
+            'max_templates' => 10,
             'features' => [
                 'homeroom_attendance',
                 'slot_attendance',
@@ -139,7 +140,9 @@ class PlanManagementTest extends TestCase
         ]);
 
         $created = Plan::where('code', 'enterprise-custom')->first();
+        $this->assertEquals(10, $created->max_templates);
         $this->assertTrue($created->hasFeature('report_studio_customizer'));
+        $this->assertEquals('10 Report Studio & Template Customizer', $created->getFeatureDisplayName('report_studio_customizer'));
         $this->assertFalse($created->hasFeature('custom_branding'));
     }
 
@@ -287,5 +290,42 @@ class PlanManagementTest extends TestCase
         $response->assertRedirect(route('admin.plans.index'));
         $response->assertSessionHas('success');
         $this->assertDatabaseMissing('plans', ['id' => $unusedPlan->id]);
+    }
+
+    /**
+     * Test 10: Plan displays customized number for Report Studio & Template Customizer.
+     */
+    public function test_plan_displays_custom_number_for_report_studio_customizer(): void
+    {
+        $plan3 = Plan::create([
+            'name' => 'Gold 3 Tier',
+            'code' => 'gold-3',
+            'price' => 199.00,
+            'billing_cycle' => 'monthly',
+            'max_templates' => 3,
+            'features' => ['report_studio_customizer'],
+            'is_active' => true,
+        ]);
+
+        $plan10 = Plan::create([
+            'name' => 'Diamond 10 Tier',
+            'code' => 'diamond-10',
+            'price' => 299.00,
+            'billing_cycle' => 'monthly',
+            'max_templates' => 10,
+            'features' => ['report_studio_customizer'],
+            'is_active' => true,
+        ]);
+
+        $this->assertEquals('3 Report Studio & Template Customizer', $plan3->getFeatureDisplayName('report_studio_customizer'));
+        $this->assertEquals('10 Report Studio & Template Customizer', $plan10->getFeatureDisplayName('report_studio_customizer'));
+
+        $response = $this->actingAs($this->superAdmin)
+            ->withSession(['active_school_id' => $this->school->school_id])
+            ->get(route('admin.plans.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('3 Report Studio & Template Customizer');
+        $response->assertSee('10 Report Studio & Template Customizer');
     }
 }

@@ -22,6 +22,7 @@ class Plan extends Model
             'max_students' => 'integer',
             'max_classes' => 'integer',
             'max_teachers' => 'integer',
+            'max_templates' => 'integer',
             'display_order' => 'integer',
         ];
     }
@@ -145,6 +146,26 @@ class Plan extends Model
         }
 
         return $enabled;
+    }
+
+    /**
+     * Get dynamic feature display name.
+     * E.g. "3 Report Studio & Template Customizer" or "10 Report Studio & Template Customizer".
+     */
+    public function getFeatureDisplayName(string $featureKey): string
+    {
+        $baseName = self::AVAILABLE_FEATURES[$featureKey]['name'] ?? $featureKey;
+
+        if ($featureKey === 'report_studio_customizer') {
+            if ($this->max_templates !== null && $this->max_templates > 0) {
+                return $this->max_templates . ' ' . $baseName;
+            }
+            if ($this->max_templates === null && $this->hasFeature('report_studio_customizer')) {
+                return 'Unlimited ' . $baseName;
+            }
+        }
+
+        return $baseName;
     }
 
     /**

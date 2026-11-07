@@ -46,6 +46,7 @@ class PlanSeeder extends Seeder
                 'max_students' => 1000,
                 'max_classes' => 60,
                 'max_teachers' => 100,
+                'max_templates' => 3,
                 'is_active' => true,
                 'is_default' => true,
                 'display_order' => 2,
@@ -76,6 +77,7 @@ class PlanSeeder extends Seeder
                 'max_students' => null, // unlimited
                 'max_classes' => null,  // unlimited
                 'max_teachers' => null, // unlimited
+                'max_templates' => null, // unlimited
                 'is_active' => true,
                 'is_default' => false,
                 'display_order' => 3,

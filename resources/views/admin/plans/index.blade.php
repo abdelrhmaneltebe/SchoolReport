@@ -134,7 +134,7 @@
                                     <li class="py-1 d-flex align-items-center justify-content-between {{ $hasThis ? 'text-dark' : 'text-muted opacity-50' }}">
                                         <div class="d-flex align-items-center gap-2">
                                             <span>{{ $fMeta['icon'] ?? '•' }}</span>
-                                            <span class="{{ $hasThis ? 'fw-semibold' : 'text-decoration-line-through' }}">{{ $fMeta['name'] }}</span>
+                                            <span class="{{ $hasThis ? 'fw-semibold' : 'text-decoration-line-through' }}">{{ $plan->getFeatureDisplayName($fKey) }}</span>
                                             @if($fKey === 'student_profiles' && $hasThis)
                                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0" style="font-size: 0.68rem;">
                                                     {{ $plan->max_students ? number_format($plan->max_students) . ' Students' : 'Unlimited' }}
@@ -262,18 +262,52 @@
                                                     <div class="p-2 border rounded bg-white h-100">
                                                         <span class="badge bg-secondary-subtle text-secondary small mb-2 fw-bold">{{ $category }}</span>
                                                         @foreach($catFeatures as $fKey => $fMeta)
-                                                            <div class="form-check mb-2">
-                                                                <input class="form-check-input feat-checkbox" 
-                                                                       type="checkbox" 
-                                                                       name="features[]" 
-                                                                       value="{{ $fKey }}" 
-                                                                       id="feat_{{ $plan->id }}_{{ $fKey }}"
-                                                                       {{ $plan->hasFeature($fKey) ? 'checked' : '' }}>
-                                                                <label class="form-check-label small lh-sm" for="feat_{{ $plan->id }}_{{ $fKey }}">
-                                                                    <strong>{{ $fMeta['icon'] }} {{ $fMeta['name'] }}</strong>
-                                                                    <div class="text-muted" style="font-size: 0.72rem;">{{ $fMeta['description'] }}</div>
-                                                                </label>
-                                                            </div>
+                                                            @if($fKey === 'report_studio_customizer')
+                                                                <div class="form-check mb-2 p-2 rounded border bg-light bg-opacity-50">
+                                                                    <div class="d-flex align-items-center gap-2">
+                                                                        <input class="form-check-input feat-checkbox m-0" 
+                                                                               type="checkbox" 
+                                                                               name="features[]" 
+                                                                               value="{{ $fKey }}" 
+                                                                               id="feat_{{ $plan->id }}_{{ $fKey }}"
+                                                                               {{ $plan->hasFeature($fKey) ? 'checked' : '' }}>
+                                                                        <label class="form-check-label small lh-sm w-100 m-0" for="feat_{{ $plan->id }}_{{ $fKey }}">
+                                                                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                                                <span>{{ $fMeta['icon'] }}</span>
+                                                                                <input type="number" 
+                                                                                       name="max_templates" 
+                                                                                       class="form-control form-control-sm d-inline-block text-center fw-bold text-primary py-0 px-1 border-primary bg-white shadow-2xs" 
+                                                                                       style="width: 55px; height: 26px; font-size: 0.82rem;"
+                                                                                       value="{{ $plan->max_templates }}" 
+                                                                                       placeholder="∞"
+                                                                                       title="Number of custom templates allowed (leave blank for unlimited)"
+                                                                                       min="0"
+                                                                                       step="1"
+                                                                                       onclick="event.stopPropagation();"
+                                                                                       oninput="if(this.value > 0) document.getElementById('feat_{{ $plan->id }}_{{ $fKey }}').checked = true;">
+                                                                                <strong>{{ $fMeta['name'] }}</strong>
+                                                                            </div>
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="text-muted mt-1 ps-4" style="font-size: 0.72rem;">{{ $fMeta['description'] }}</div>
+                                                                    <div class="text-muted ps-4" style="font-size: 0.68rem;">
+                                                                        💡 <em>Specify allowed templates (e.g. <strong>3</strong> or <strong>10</strong>), or leave blank for Unlimited.</em>
+                                                                    </div>
+                                                                </div>
+                                                            @else
+                                                                <div class="form-check mb-2">
+                                                                    <input class="form-check-input feat-checkbox" 
+                                                                           type="checkbox" 
+                                                                           name="features[]" 
+                                                                           value="{{ $fKey }}" 
+                                                                           id="feat_{{ $plan->id }}_{{ $fKey }}"
+                                                                           {{ $plan->hasFeature($fKey) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label small lh-sm" for="feat_{{ $plan->id }}_{{ $fKey }}">
+                                                                        <strong>{{ $fMeta['icon'] }} {{ $fMeta['name'] }}</strong>
+                                                                        <div class="text-muted" style="font-size: 0.72rem;">{{ $fMeta['description'] }}</div>
+                                                                    </label>
+                                                                </div>
+                                                            @endif
                                                         @endforeach
 
                                                         @if($category === 'Students')
@@ -477,18 +511,51 @@
                                     <div class="p-2 border rounded bg-white h-100">
                                         <span class="badge bg-secondary-subtle text-secondary small mb-2 fw-bold">{{ $category }}</span>
                                         @foreach($catFeatures as $fKey => $fMeta)
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input feat-checkbox" 
-                                                       type="checkbox" 
-                                                       name="features[]" 
-                                                       value="{{ $fKey }}" 
-                                                       id="create_feat_{{ $fKey }}"
-                                                       {{ in_array($fKey, ['homeroom_attendance', 'batch_gradebook', 'student_profiles']) ? 'checked' : '' }}>
-                                                <label class="form-check-label small lh-sm" for="create_feat_{{ $fKey }}">
-                                                    <strong>{{ $fMeta['icon'] }} {{ $fMeta['name'] }}</strong>
-                                                    <div class="text-muted" style="font-size: 0.72rem;">{{ $fMeta['description'] }}</div>
-                                                </label>
-                                            </div>
+                                            @if($fKey === 'report_studio_customizer')
+                                                <div class="form-check mb-2 p-2 rounded border bg-light bg-opacity-50">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <input class="form-check-input feat-checkbox m-0" 
+                                                               type="checkbox" 
+                                                               name="features[]" 
+                                                               value="{{ $fKey }}" 
+                                                               id="create_feat_{{ $fKey }}"
+                                                               {{ in_array($fKey, ['homeroom_attendance', 'batch_gradebook', 'student_profiles']) ? 'checked' : '' }}>
+                                                        <label class="form-check-label small lh-sm w-100 m-0" for="create_feat_{{ $fKey }}">
+                                                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                                <span>{{ $fMeta['icon'] }}</span>
+                                                                <input type="number" 
+                                                                       name="max_templates" 
+                                                                       class="form-control form-control-sm d-inline-block text-center fw-bold text-primary py-0 px-1 border-primary bg-white shadow-2xs" 
+                                                                       style="width: 55px; height: 26px; font-size: 0.82rem;"
+                                                                       placeholder="∞"
+                                                                       title="Number of custom templates allowed (leave blank for unlimited)"
+                                                                       min="0"
+                                                                       step="1"
+                                                                       onclick="event.stopPropagation();"
+                                                                       oninput="if(this.value > 0) document.getElementById('create_feat_{{ $fKey }}').checked = true;">
+                                                                <strong>{{ $fMeta['name'] }}</strong>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                    <div class="text-muted mt-1 ps-4" style="font-size: 0.72rem;">{{ $fMeta['description'] }}</div>
+                                                    <div class="text-muted ps-4" style="font-size: 0.68rem;">
+                                                        💡 <em>Specify allowed templates (e.g. <strong>3</strong> or <strong>10</strong>), or leave blank for Unlimited.</em>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input feat-checkbox" 
+                                                           type="checkbox" 
+                                                           name="features[]" 
+                                                           value="{{ $fKey }}" 
+                                                           id="create_feat_{{ $fKey }}"
+                                                           {{ in_array($fKey, ['homeroom_attendance', 'batch_gradebook', 'student_profiles']) ? 'checked' : '' }}>
+                                                    <label class="form-check-label small lh-sm" for="create_feat_{{ $fKey }}">
+                                                        <strong>{{ $fMeta['icon'] }} {{ $fMeta['name'] }}</strong>
+                                                        <div class="text-muted" style="font-size: 0.72rem;">{{ $fMeta['description'] }}</div>
+                                                    </label>
+                                                </div>
+                                            @endif
                                         @endforeach
 
                                         @if($category === 'Students')

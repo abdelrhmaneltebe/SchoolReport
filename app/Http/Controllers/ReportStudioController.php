@@ -288,6 +288,25 @@ class ReportStudioController extends Controller
 
         $isGlobal = $request->boolean('is_global');
 
+        // Check subscription plan tier quota for custom report templates
+        if (!$isGlobal) {
+            $user = auth()->user();
+            $isSuperAdmin = $user && method_exists($user, 'isSuperAdmin') ? $user->isSuperAdmin() : false;
+
+            if (!$isSuperAdmin) {
+                if (!$activeSchool->hasFeature('report_studio_customizer')) {
+                    return redirect()->back()->with('error', "⚠️ Your subscription plan tier does not include the Report Studio & Template Customizer. Please contact your administrator to upgrade.");
+                }
+
+                if ($activeSchool->plan && $activeSchool->plan->max_templates !== null) {
+                    $schoolCustomCount = ReportTemplate::where('school_id', $activeSchool->school_id)->count();
+                    if ($schoolCustomCount >= $activeSchool->plan->max_templates) {
+                        return redirect()->back()->with('error', "⚠️ Your plan tier ({$activeSchool->plan->name}) is limited to {$activeSchool->plan->max_templates} custom templates. Please upgrade your plan tier to create more custom templates.");
+                    }
+                }
+            }
+        }
+
         $template = ReportTemplate::create([
             'school_id' => $isGlobal ? null : $activeSchool->school_id,
             'is_global' => $isGlobal,
