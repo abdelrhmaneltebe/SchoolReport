@@ -29,7 +29,27 @@ class HomePageAndDemoRequestTest extends TestCase
         $response->assertSee('Enterprise School Reporting');
         $response->assertSee('Request Institutional Demo');
         $response->assertSee('Academic Pillars');
+        $response->assertSee('Plans &amp; Pricing', false);
         $response->assertSee('Sign In');
+    }
+
+    public function test_home_page_displays_active_subscription_plans(): void
+    {
+        \App\Models\Plan::create([
+            'name' => 'Flagship Institutional Tier',
+            'code' => 'flagship-test',
+            'price' => 199.00,
+            'billing_cycle' => 'monthly',
+            'features' => ['homeroom_attendance', 'jasper_report_cards'],
+            'is_active' => true,
+        ]);
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Flagship Institutional Tier');
+        $response->assertSee('$199');
+        $response->assertSee('Homeroom Daily Attendance');
+        $response->assertSee('JasperReports Official Report Cards');
     }
 
     public function test_authenticated_user_can_view_home_page_with_dashboard_access(): void

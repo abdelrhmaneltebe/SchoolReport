@@ -180,6 +180,7 @@
             <nav class="d-none d-md-flex align-items-center gap-4">
                 <a href="#features" class="text-secondary text-decoration-none fw-semibold small hover-dark">Academic Pillars</a>
                 <a href="#jasper" class="text-secondary text-decoration-none fw-semibold small hover-dark">JasperReports Studio</a>
+                <a href="#pricing" class="text-secondary text-decoration-none fw-semibold small hover-dark">Plans &amp; Pricing</a>
                 <a href="#instant-demo" class="text-secondary text-decoration-none fw-semibold small hover-dark">Live Test Drive</a>
                 <a href="#demo" class="text-secondary text-decoration-none fw-semibold small hover-dark">Request Demo</a>
             </nav>
@@ -475,6 +476,111 @@
         </div>
     </section>
 
+    <!-- 4.5. SUBSCRIPTION PLANS & PRICING -->
+    <section id="pricing" class="py-5 bg-white border-top">
+        <div class="container py-4">
+            <div class="text-center max-w-700 mx-auto mb-5">
+                <span class="badge bg-indigo-subtle text-indigo px-3 py-1 rounded-pill fw-bold small mb-2">TRANSPARENT INSTITUTIONAL PLANS</span>
+                <h2 class="fw-bold text-dark mb-2">Predictable Plans for Modern Schools</h2>
+                <p class="text-muted">Choose the ideal tier tailored to your school body size and academic reporting requirements. All plans include dedicated multi-tenant isolation, automatic cloud backups, and Cognia-aligned marksheet engines.</p>
+            </div>
+
+            <div class="row g-4 justify-content-center align-items-stretch">
+                @forelse($plans as $plan)
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 rounded-4 border {{ $plan->is_default ? 'border-primary border-2 shadow-lg position-relative' : 'border-slate-200 shadow-sm' }} bg-white d-flex flex-column justify-content-between overflow-hidden">
+                            
+                            @if($plan->is_default)
+                                <div class="position-absolute top-0 end-0 bg-primary text-white small fw-bold px-3 py-1 rounded-bottom-start shadow-sm" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                    ★ MOST POPULAR TIER
+                                </div>
+                            @endif
+
+                            <div class="p-4 p-md-5">
+                                <div class="mb-3">
+                                    <span class="badge bg-light text-secondary border font-monospace px-2 py-1 small">{{ strtoupper($plan->code) }}</span>
+                                </div>
+                                <h4 class="fw-bold text-dark mb-2">{{ $plan->name }}</h4>
+                                <p class="text-muted small mb-4" style="min-height: 40px;">
+                                    {{ $plan->description ?? 'Full academic management and reporting package.' }}
+                                </p>
+
+                                <div class="d-flex align-items-baseline gap-1 mb-4 pb-3 border-bottom">
+                                    <span class="display-5 fw-bold text-dark">${{ number_format($plan->price, 0) }}</span>
+                                    <span class="text-muted fw-semibold">/ {{ $plan->billing_cycle }}</span>
+                                </div>
+
+                                <!-- Capacity Highlights -->
+                                <div class="mb-4 p-3 bg-light rounded-3 border">
+                                    <div class="d-flex align-items-center gap-2 mb-2 small text-dark fw-semibold">
+                                        <span>👥</span>
+                                        <span>{{ $plan->max_students ? number_format($plan->max_students) . ' Students Capacity' : 'Unlimited Students' }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mb-2 small text-dark fw-semibold">
+                                        <span>🏛️</span>
+                                        <span>{{ $plan->max_classes ? number_format($plan->max_classes) . ' Classes & Sections' : 'Unlimited Classes' }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 small text-dark fw-semibold">
+                                        <span>🛡️</span>
+                                        <span>Independent Database Tenant</span>
+                                    </div>
+                                </div>
+
+                                <!-- Feature List -->
+                                <h6 class="fw-bold small text-muted text-uppercase mb-3" style="font-size: 0.72rem; letter-spacing: 0.8px;">
+                                    Included Modules ({{ count($plan->features ?? []) }} Features):
+                                </h6>
+                                <ul class="list-unstyled mb-0 small">
+                                    @foreach($availableFeatures as $fKey => $fMeta)
+                                        @php
+                                            $isIncluded = $plan->hasFeature($fKey);
+                                        @endphp
+                                        <li class="py-1.5 d-flex align-items-center justify-content-between {{ $isIncluded ? 'text-dark' : 'text-muted opacity-40' }}">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span>{{ $fMeta['icon'] }}</span>
+                                                <span class="{{ $isIncluded ? 'fw-medium' : 'text-decoration-line-through' }}">{{ $fMeta['name'] }}</span>
+                                            </div>
+                                            @if($isIncluded)
+                                                <span class="text-success fw-bold">✓</span>
+                                            @else
+                                                <span class="text-muted" style="font-size: 0.75rem;">—</span>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+
+                            <div class="p-4 bg-light bg-opacity-50 border-top mt-auto">
+                                <a href="#demo" class="btn w-100 fw-bold py-2.5 {{ $plan->is_default ? 'btn-gradient-primary shadow-sm' : 'btn-outline-primary' }}" style="border-radius: 10px;" onclick="selectDemoPlan('{{ $plan->name }}')">
+                                    Get Started with {{ $plan->name }} →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-12 text-center text-muted py-5">
+                        <p>No plans currently active. Please configure plans in the Super Admin console.</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Enterprise banner below cards -->
+            <div class="mt-5 p-4 rounded-4 bg-light border text-center max-w-900 mx-auto">
+                <div class="row align-items-center justify-content-between g-3">
+                    <div class="col-md-8 text-md-start">
+                        <h5 class="fw-bold text-dark mb-1">Need a tailored plan for a School District or Multi-Campus Network?</h5>
+                        <p class="text-muted small mb-0">We support custom server provisions, tailored Cognia / British IB templates, dedicated Report Studio compiler environments, and on-premise deployments.</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a href="#demo" class="btn btn-dark fw-bold px-4 py-2" style="border-radius: 8px;">
+                            Contact Academic Solutions →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- 5. 1-CLICK INSTANT TEST DRIVE -->
     <section id="instant-demo" class="py-5 bg-light border-top border-bottom">
         <div class="container py-4">
@@ -593,6 +699,26 @@
                                 </div>
 
                                 <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Student Body Size</label>
+                                    <select name="student_count" class="form-select">
+                                        <option value="Under 500 Students">Under 500 Students</option>
+                                        <option value="500 - 1,500 Students">500 - 1,500 Students</option>
+                                        <option value="1,500 - 3,500 Students">1,500 - 3,500 Students</option>
+                                        <option value="3,500+ Students (Multi-Campus)">3,500+ Students (Multi-Campus)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Preferred Subscription Plan</label>
+                                    <select name="interested_plan" id="demoInterestedPlan" class="form-select">
+                                        <option value="">-- Let us recommend a tier --</option>
+                                        @foreach($plans as $pl)
+                                            <option value="{{ $pl->name }}">{{ $pl->name }} (${{ number_format($pl->price, 0) }}/{{ $pl->billing_cycle }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-dark">Your Role</label>
                                     <select name="role" class="form-select">
                                         <option value="School Principal / Director">School Principal / Director</option>
@@ -600,16 +726,6 @@
                                         <option value="IT Director / System Coordinator">IT Director / System Coordinator</option>
                                         <option value="Registrar / Administrative Officer">Registrar / Administrative Officer</option>
                                         <option value="Teacher / Academic Counselor">Teacher / Academic Counselor</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-dark">Student Body Size</label>
-                                    <select name="student_count" class="form-select">
-                                        <option value="Under 500 Students">Under 500 Students</option>
-                                        <option value="500 - 1,500 Students">500 - 1,500 Students</option>
-                                        <option value="1,500 - 3,500 Students">1,500 - 3,500 Students</option>
-                                        <option value="3,500+ Students (Multi-Campus)">3,500+ Students (Multi-Campus)</option>
                                     </select>
                                 </div>
 
@@ -649,6 +765,8 @@
                     <div class="d-flex flex-wrap justify-content-md-end gap-3 small">
                         <a href="{{ route('login') }}" class="text-white text-decoration-none">Portal Sign In</a>
                         <span class="text-secondary">•</span>
+                        <a href="#pricing" class="text-white text-decoration-none">Plans &amp; Pricing</a>
+                        <span class="text-secondary">•</span>
                         <a href="#instant-demo" class="text-white text-decoration-none">Live Test Drive</a>
                         <span class="text-secondary">•</span>
                         <a href="#demo" class="text-white text-decoration-none">Request Demo</a>
@@ -663,5 +781,18 @@
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function selectDemoPlan(planName) {
+            const selectEl = document.getElementById('demoInterestedPlan');
+            if (selectEl) {
+                for (let i = 0; i < selectEl.options.length; i++) {
+                    if (selectEl.options[i].text.includes(planName)) {
+                        selectEl.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>

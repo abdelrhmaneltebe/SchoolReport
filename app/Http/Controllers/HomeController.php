@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\MasterSubject;
 use App\Models\User;
 use App\Models\DemoRequest;
+use App\Models\Plan;
 
 class HomeController extends Controller
 {
@@ -25,12 +26,17 @@ class HomeController extends Controller
         $demoSuperAdmin = User::where('role', 'SUPER_ADMIN')->first();
         $demoSchoolAdmin = User::where('role', 'SCHOOL_ADMIN')->first();
 
+        $plans = Plan::active()->ordered()->get();
+        $availableFeatures = Plan::AVAILABLE_FEATURES;
+
         return view('home', compact(
             'schoolsCount',
             'studentsCount',
             'subjectsCount',
             'demoSuperAdmin',
-            'demoSchoolAdmin'
+            'demoSchoolAdmin',
+            'plans',
+            'availableFeatures'
         ));
     }
 
