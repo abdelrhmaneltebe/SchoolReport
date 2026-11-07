@@ -135,6 +135,11 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <span>{{ $fMeta['icon'] ?? '•' }}</span>
                                             <span class="{{ $hasThis ? 'fw-semibold' : 'text-decoration-line-through' }}">{{ $fMeta['name'] }}</span>
+                                            @if($fKey === 'student_profiles' && $hasThis)
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0" style="font-size: 0.68rem;">
+                                                    {{ $plan->max_students ? number_format($plan->max_students) . ' Students' : 'Unlimited' }}
+                                                </span>
+                                            @endif
                                         </div>
                                         @if($hasThis)
                                             <span class="text-success fw-bold">✓</span>
@@ -215,19 +220,16 @@
                                             <input type="text" name="currency" class="form-control" value="{{ $plan->currency ?? 'USD' }}">
                                         </div>
 
-                                        <!-- Capacity Limits -->
-                                        <div class="col-md-4">
-                                            <label class="form-label small fw-bold">Max Students</label>
-                                            <input type="number" name="max_students" class="form-control" value="{{ $plan->max_students }}" placeholder="Blank = Unlimited">
-                                            <small class="text-muted">Leave empty for unlimited</small>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small fw-bold">Max Classes</label>
+                                        <!-- Capacity & Sorting Limits -->
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Max Classes Limit</label>
                                             <input type="number" name="max_classes" class="form-control" value="{{ $plan->max_classes }}" placeholder="Blank = Unlimited">
+                                            <small class="text-muted">Maximum classes allowed (empty = unlimited)</small>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label small fw-bold">Display Order</label>
                                             <input type="number" name="display_order" class="form-control" value="{{ $plan->display_order }}">
+                                            <small class="text-muted">Sort priority on public pricing lists</small>
                                         </div>
 
                                         <div class="col-md-6">
@@ -273,6 +275,29 @@
                                                                 </label>
                                                             </div>
                                                         @endforeach
+
+                                                        @if($category === 'Students')
+                                                            <div class="mt-2 pt-2 border-top bg-light p-2 rounded-2">
+                                                                <label class="form-label small fw-bold text-dark mb-1 d-flex justify-content-between align-items-center">
+                                                                    <span>👥 Number of Students Allowed:</span>
+                                                                    <span class="badge bg-white text-muted border fw-normal" style="font-size: 0.68rem;">Blank = Unlimited</span>
+                                                                </label>
+                                                                <div class="input-group input-group-sm">
+                                                                    <span class="input-group-text bg-white text-muted fw-semibold">Max</span>
+                                                                    <input type="number" 
+                                                                           name="max_students" 
+                                                                           class="form-control form-control-sm fw-bold text-primary bg-white" 
+                                                                           value="{{ $plan->max_students }}" 
+                                                                           placeholder="e.g. 250 (leave blank for unlimited)" 
+                                                                           min="0"
+                                                                           step="1">
+                                                                    <span class="input-group-text bg-white text-muted">Students</span>
+                                                                </div>
+                                                                <div class="form-text text-muted" style="font-size: 0.68rem;">
+                                                                    Maximum student enrollment capacity permitted under this plan.
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -410,18 +435,16 @@
                             <input type="text" name="currency" class="form-control" value="USD">
                         </div>
 
-                        <!-- Capacity Limits -->
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Max Students Limit</label>
-                            <input type="number" name="max_students" class="form-control" placeholder="Blank = Unlimited">
-                        </div>
-                        <div class="col-md-4">
+                        <!-- Capacity & Sorting Limits -->
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Max Classes Limit</label>
                             <input type="number" name="max_classes" class="form-control" placeholder="Blank = Unlimited">
+                            <small class="text-muted">Maximum classes allowed (empty = unlimited)</small>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Display Order</label>
                             <input type="number" name="display_order" class="form-control" value="0">
+                            <small class="text-muted">Sort priority on public pricing lists</small>
                         </div>
 
                         <div class="col-md-6">
@@ -467,6 +490,28 @@
                                                 </label>
                                             </div>
                                         @endforeach
+
+                                        @if($category === 'Students')
+                                            <div class="mt-2 pt-2 border-top bg-light p-2 rounded-2">
+                                                <label class="form-label small fw-bold text-dark mb-1 d-flex justify-content-between align-items-center">
+                                                    <span>👥 Number of Students Allowed:</span>
+                                                    <span class="badge bg-white text-muted border fw-normal" style="font-size: 0.68rem;">Blank = Unlimited</span>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white text-muted fw-semibold">Max</span>
+                                                    <input type="number" 
+                                                           name="max_students" 
+                                                           class="form-control form-control-sm fw-bold text-primary bg-white" 
+                                                           placeholder="e.g. 250 (leave blank for unlimited)" 
+                                                           min="0"
+                                                           step="1">
+                                                    <span class="input-group-text bg-white text-muted">Students</span>
+                                                </div>
+                                                <div class="form-text text-muted" style="font-size: 0.68rem;">
+                                                    Maximum student enrollment capacity permitted under this plan.
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
