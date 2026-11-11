@@ -11,6 +11,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(SchoolReportingSeeder::class);
+        $this->call([
+            SchoolReportingSeeder::class,
+            UserSeeder::class,
+            MultiTierGradingSeeder::class,
+            SgisCustomReportSeeder::class,
+            PlanSeeder::class,
+        ]);
     }
 }

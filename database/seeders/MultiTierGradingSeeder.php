@@ -17,11 +17,13 @@ class MultiTierGradingSeeder extends Seeder
         $school = School::first();
         if (!$school) return;
 
-        // Clean previous multi-tier records
-        GradingTemplateCategory::truncate();
+        // Clean previous multi-tier records safely
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         GradingCategory::truncate();
+        GradingTemplateCategory::truncate();
         AcademicGradingPeriod::truncate();
         GradingStructureRule::truncate();
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         $catList5 = [
             ['name' => 'Cat1 (Homework & Engagement)', 'weight' => 20.00],
